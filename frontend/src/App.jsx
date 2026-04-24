@@ -16,7 +16,8 @@ export default function App() {
     setState('loading');
     setError('');
     try {
-      const res = await fetch(`http://${window.location.hostname}:3001/api/player/${steamId}?type=${type}`);
+      const API = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3001`;
+      const res = await fetch(`${API}/api/player/${steamId}?type=${type}`);
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || 'Something went wrong.');
