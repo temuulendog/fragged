@@ -1,0 +1,375 @@
+/* ============================================================
+   FRAGGED Design System — Color & Type Tokens
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ------------------------------------------------------------
+   COLOR TOKENS — Base Palette
+   ------------------------------------------------------------ */
+:root {
+  /* Backgrounds */
+  --color-bg-base:          #0d1f17;
+  --color-bg-surface:       #1a2f20;
+  --color-bg-surface-2:     #223828;
+  --color-bg-surface-3:     #2a4432;
+  --color-bg-overlay:       rgba(13, 31, 23, 0.94);
+
+  /* Text */
+  --color-text-primary:     #f5f0e8;
+  --color-text-secondary:   rgba(245, 240, 232, 0.55);
+  --color-text-tertiary:    rgba(245, 240, 232, 0.30);
+  --color-text-inverse:     #0d1f17;
+
+  /* Accent — Amber */
+  --color-amber:            #d4834a;
+  --color-amber-hover:      #e8954f;
+  --color-amber-muted:      rgba(212, 131, 74, 0.15);
+  --color-amber-border:     rgba(212, 131, 74, 0.35);
+  --color-amber-glow:       rgba(212, 131, 74, 0.20);
+
+  /* Stat States */
+  --color-stat-good:        #4a7c59;
+  --color-stat-good-muted:  rgba(74, 124, 89, 0.15);
+  --color-stat-good-glow:   rgba(74, 124, 89, 0.25);
+  --color-stat-warn:        #d4834a;
+  --color-stat-warn-muted:  rgba(212, 131, 74, 0.15);
+  --color-stat-bad:         #8b3a3a;
+  --color-stat-bad-muted:   rgba(139, 58, 58, 0.15);
+  --color-stat-bad-glow:    rgba(139, 58, 58, 0.25);
+
+  /* Borders */
+  --color-border:           rgba(245, 240, 232, 0.07);
+  --color-border-hover:     rgba(245, 240, 232, 0.14);
+  --color-border-accent:    rgba(212, 131, 74, 0.40);
+  --color-divider:          #d4834a;
+
+  /* Input */
+  --color-input-bg:         rgba(10, 24, 16, 0.8);
+  --color-input-border:     rgba(245, 240, 232, 0.15);
+  --color-input-focus:      rgba(212, 131, 74, 0.50);
+  --color-input-placeholder:rgba(245, 240, 232, 0.30);
+}
+
+/* ------------------------------------------------------------
+   SEMANTIC COLOR TOKENS
+   ------------------------------------------------------------ */
+:root {
+  --bg:             var(--color-bg-base);
+  --surface:        var(--color-bg-surface);
+  --surface-raised: var(--color-bg-surface-2);
+  --fg:             var(--color-text-primary);
+  --fg-muted:       var(--color-text-secondary);
+  --fg-subtle:      var(--color-text-tertiary);
+  --accent:         var(--color-amber);
+  --accent-hover:   var(--color-amber-hover);
+  --border:         var(--color-border);
+}
+
+/* ------------------------------------------------------------
+   SPACING TOKENS
+   ------------------------------------------------------------ */
+:root {
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   24px;
+  --space-6:   32px;
+  --space-7:   48px;
+  --space-8:   64px;
+  --space-9:   96px;
+  --space-10:  128px;
+}
+
+/* ------------------------------------------------------------
+   BORDER RADIUS TOKENS
+   ------------------------------------------------------------ */
+:root {
+  --radius-sm:    4px;
+  --radius-md:    8px;
+  --radius-lg:    12px;
+  --radius-xl:    16px;
+  --radius-pill:  999px;
+  --radius-circle:50%;
+}
+
+/* ------------------------------------------------------------
+   SHADOW / ELEVATION TOKENS
+   ------------------------------------------------------------ */
+:root {
+  --shadow-card:        0 2px 12px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover:  0 8px 32px rgba(0, 0, 0, 0.50), 0 0 0 1px rgba(212, 131, 74, 0.20);
+  --shadow-modal:       0 24px 64px rgba(0, 0, 0, 0.65);
+  --shadow-input-focus: 0 0 0 2px rgba(212, 131, 74, 0.40), 0 0 16px rgba(212, 131, 74, 0.15);
+  --shadow-btn-amber:   0 4px 20px rgba(212, 131, 74, 0.30);
+  --shadow-btn-hover:   0 6px 28px rgba(212, 131, 74, 0.45);
+  --shadow-stat-good:   0 0 20px rgba(74, 124, 89, 0.25);
+  --shadow-stat-bad:    0 0 20px rgba(139, 58, 58, 0.25);
+}
+
+/* ------------------------------------------------------------
+   TYPOGRAPHY — Font Families
+   ------------------------------------------------------------ */
+:root {
+  --font-display:  'Barlow Condensed', sans-serif;
+  --font-body:     'Inter', sans-serif;
+  --font-mono:     'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ------------------------------------------------------------
+   TYPOGRAPHY — Scale
+   ------------------------------------------------------------ */
+:root {
+  --text-xs:   11px;
+  --text-sm:   13px;
+  --text-base: 15px;
+  --text-md:   17px;
+  --text-lg:   20px;
+  --text-xl:   24px;
+  --text-2xl:  32px;
+  --text-3xl:  48px;
+  --text-4xl:  64px;
+  --text-5xl:  96px;
+  --text-6xl:  128px;
+  --text-hero: clamp(80px, 15vw, 200px);
+}
+
+/* ------------------------------------------------------------
+   TYPOGRAPHY — Semantic Roles
+   ------------------------------------------------------------ */
+:root {
+  /* Wordmark */
+  --type-wordmark-font:    var(--font-display);
+  --type-wordmark-weight:  800;
+  --type-wordmark-size:    var(--text-hero);
+  --type-wordmark-tracking:0.06em;
+  --type-wordmark-transform:uppercase;
+
+  /* Section header (e.g. "THE VERDICT") */
+  --type-section-font:     var(--font-display);
+  --type-section-weight:   700;
+  --type-section-size:     var(--text-3xl);
+  --type-section-tracking: 0.12em;
+  --type-section-transform:uppercase;
+
+  /* Card heading / stat label */
+  --type-label-font:       var(--font-display);
+  --type-label-weight:     700;
+  --type-label-size:       var(--text-sm);
+  --type-label-tracking:   0.10em;
+  --type-label-transform:  uppercase;
+
+  /* Stat number */
+  --type-stat-font:        var(--font-display);
+  --type-stat-weight:      700;
+  --type-stat-size:        var(--text-4xl);
+  --type-stat-tracking:    -0.02em;
+
+  /* Body copy */
+  --type-body-font:        var(--font-body);
+  --type-body-weight:      400;
+  --type-body-size:        var(--text-base);
+  --type-body-line-height: 1.65;
+
+  /* UI / Button label */
+  --type-ui-font:          var(--font-display);
+  --type-ui-weight:        700;
+  --type-ui-size:          var(--text-base);
+  --type-ui-tracking:      0.08em;
+  --type-ui-transform:     uppercase;
+
+  /* Small / meta */
+  --type-meta-font:        var(--font-body);
+  --type-meta-weight:      400;
+  --type-meta-size:        var(--text-xs);
+  --type-meta-color:       var(--fg-muted);
+}
+
+/* ------------------------------------------------------------
+   ANIMATION TOKENS
+   ------------------------------------------------------------ */
+:root {
+  --ease-out:        cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:     cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast:   150ms;
+  --duration-base:   200ms;
+  --duration-slow:   400ms;
+  --duration-xslow:  700ms;
+}
+
+/* ------------------------------------------------------------
+   BASE RESETS & GLOBAL STYLES
+   ------------------------------------------------------------ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.6;
+}
+
+/* ------------------------------------------------------------
+   GRAIN TEXTURE UTILITY
+   ------------------------------------------------------------ */
+.grain-overlay {
+  position: relative;
+}
+.grain-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  opacity: 0.6;
+  mix-blend-mode: overlay;
+  border-radius: inherit;
+}
+
+/* ------------------------------------------------------------
+   COMPONENT BASE CLASSES
+   ------------------------------------------------------------ */
+
+/* Card */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-5);
+  transition: transform var(--duration-base) var(--ease-out),
+              box-shadow var(--duration-base) var(--ease-out),
+              border-color var(--duration-base) var(--ease-out);
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--color-border-accent);
+}
+
+/* Button — Primary (Amber) */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background: var(--accent);
+  color: var(--color-text-inverse);
+  font-family: var(--font-display);
+  font-weight: var(--type-ui-weight);
+  font-size: var(--type-ui-size);
+  letter-spacing: var(--type-ui-tracking);
+  text-transform: uppercase;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-6);
+  cursor: pointer;
+  box-shadow: var(--shadow-btn-amber);
+  transition: background var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out);
+}
+.btn-primary:hover {
+  background: var(--accent-hover);
+  box-shadow: var(--shadow-btn-hover);
+  transform: scale(1.01);
+}
+.btn-primary:active {
+  transform: scale(0.99);
+}
+
+/* Button — Secondary (Outline) */
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background: transparent;
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-weight: var(--type-ui-weight);
+  font-size: var(--type-ui-size);
+  letter-spacing: var(--type-ui-tracking);
+  text-transform: uppercase;
+  border: 1px solid rgba(245, 240, 232, 0.30);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-6);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
+}
+.btn-outline:hover {
+  color: var(--accent);
+  border-color: var(--color-border-accent);
+  background: var(--color-amber-muted);
+}
+
+/* Input — Pill */
+.input-pill {
+  width: 100%;
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-pill);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  padding: var(--space-4) var(--space-6);
+  outline: none;
+  transition: border-color var(--duration-base) var(--ease-out),
+              box-shadow var(--duration-base) var(--ease-out);
+}
+.input-pill::placeholder {
+  color: var(--color-input-placeholder);
+}
+.input-pill:focus {
+  border-color: var(--color-input-focus);
+  box-shadow: var(--shadow-input-focus);
+}
+
+/* Progress Bar */
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(245, 240, 232, 0.08);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.progress-bar__fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  transition: width 1s var(--ease-out);
+}
+
+/* Stat label */
+.stat-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-xs);
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* Amber divider */
+.divider-amber {
+  width: 100%;
+  height: 1px;
+  background: var(--color-divider);
+  opacity: 0.6;
+}
