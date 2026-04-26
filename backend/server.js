@@ -89,7 +89,7 @@ app.get('/api/player/:steamId', async (req, res) => {
     const rating = leetifyData?.rating || null;
     // Grab enough matches to compute rank changes — only keep Premier (rank_type 11)
     const allMatches = leetifyData?.recent_matches || [];
-    const premierMatches = allMatches.filter(m => m.rank_type === 11 || m.rank_type === 12).slice(0, 15);
+    const premierMatches = allMatches.filter(m => m.rank_type === 11 || m.rank_type === 12).slice(0, 99);
 
     res.json({
       name: profile.personaname,
@@ -120,6 +120,22 @@ app.get('/api/player/:steamId', async (req, res) => {
         preaim: leetifyData.stats?.preaim ?? null,
         premier: leetifyData.ranks?.premier ?? null,
         recentMatches: premierMatches,
+        counterStrafing: leetifyData.stats?.counter_strafing_good_shots_ratio ?? null,
+        ctOpeningAggression: leetifyData.stats?.ct_opening_aggression_success_rate ?? null,
+        tOpeningAggression: leetifyData.stats?.t_opening_aggression_success_rate ?? null,
+        ctOpeningDuel: leetifyData.stats?.ct_opening_duel_success_percentage ?? null,
+        tOpeningDuel: leetifyData.stats?.t_opening_duel_success_percentage ?? null,
+        flashThrown: leetifyData.stats?.flashbang_thrown ?? null,
+        flashHitFoePerFlash: leetifyData.stats?.flashbang_hit_foe_per_flashbang ?? null,
+        flashHitFoeDuration: leetifyData.stats?.flashbang_hit_foe_avg_duration ?? null,
+        flashHitFriendPerFlash: leetifyData.stats?.flashbang_hit_friend_per_flashbang ?? null,
+        flashLeadToKill: leetifyData.stats?.flashbang_leading_to_kill ?? null,
+        heFoesDmg: leetifyData.stats?.he_foes_damage_avg ?? null,
+        heFriendsDmg: leetifyData.stats?.he_friends_damage_avg ?? null,
+        tradedDeathsSuccess: leetifyData.stats?.traded_deaths_success_percentage ?? null,
+        tradeKillOpps: leetifyData.stats?.trade_kill_opportunities_per_round ?? null,
+        tradeKillsSuccess: leetifyData.stats?.trade_kills_success_percentage ?? null,
+        utilityOnDeath: leetifyData.stats?.utility_on_death_avg ?? null,
       } : null,
     });
 
