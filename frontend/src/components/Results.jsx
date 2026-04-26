@@ -1,13 +1,119 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 const RANK_TIERS = [
-  { min: 25000, label: '25K+', color: '#e05252', aim: 82, utility: 62, positioning: 57, opening: 0.77,  clutch: 10.93 },
-  { min: 20000, label: '20K+', color: '#ff10d7', aim: 73, utility: 59, positioning: 54, opening: 0.45,  clutch: 11.50 },
-  { min: 15000, label: '15K+', color: '#8b5cf6', aim: 64, utility: 56, positioning: 51, opening: 0.20,  clutch: 10.80 },
-  { min: 10000, label: '10K+', color: '#3b82f6', aim: 57, utility: 52, positioning: 48, opening: -0.50, clutch:  9.50 },
-  { min:  5000, label:  '5K+', color: '#87b3fa', aim: 51, utility: 49, positioning: 46, opening: -1.50, clutch:  8.00 },
-  { min:     1, label:  '1K+', color: '#94a3b8', aim: 45, utility: 46, positioning: 44, opening: -3.00, clutch:  6.50 },
+  { min: 25000, label: '25K+', color: '#ef4444', aim: 82, utility: 62, positioning: 57, opening: 0.77,  clutch: 10.93 },
+  { min: 20000, label: '20K+', color: '#ec4899', aim: 74, utility: 61, positioning: 55, opening: 0.45,  clutch: 11.50 },
+  { min: 15000, label: '15K+', color: '#a78bfa', aim: 66, utility: 58, positioning: 53, opening: 0.20,  clutch: 10.80 },
+  { min: 10000, label: '10K+', color: '#3b82f6', aim: 58, utility: 55, positioning: 51, opening: -0.50, clutch:  9.50 },
+  { min:  5000, label:  '5K+', color: '#60a5fa', aim: 48, utility: 51, positioning: 50, opening: -1.50, clutch:  8.00 },
+  { min:     1, label:  '1K+', color: '#94a3b8', aim: 31, utility: 46, positioning: 46, opening: -3.00, clutch:  6.50 },
 ];
+
+const T = {
+  bg: '#06060c',
+  bg2: '#0c0c18',
+  surface: 'linear-gradient(145deg, rgba(28, 28, 46, 0.55) 0%, rgba(14, 14, 24, 0.7) 100%)',
+  surfaceAlt: 'linear-gradient(180deg, rgba(36, 36, 58, 0.4) 0%, rgba(18, 18, 32, 0.6) 100%)',
+  border: 'rgba(120, 120, 180, 0.10)',
+  borderStrong: 'rgba(167, 139, 250, 0.22)',
+  text: '#f4f4f8',
+  text2: '#a8a8c0',
+  textMuted: '#6a6a82',
+  textDim: '#4a4a5e',
+  accent: '#a78bfa',
+  accent2: '#22d3ee',
+  good: '#34d399',
+  bad: '#f87171',
+  warn: '#fbbf24',
+  ct: '#60a5fa',
+  tSide: '#fbbf24',
+};
+
+const KEYFRAMES = `
+@keyframes fr-fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fr-fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes fr-scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes fr-growBar {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes fr-drawArc {
+  from { stroke-dashoffset: var(--arc-len, 200); }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes fr-pulse {
+  0%, 100% { box-shadow: 0 0 30px var(--glow), 0 0 0 1px rgba(255,255,255,0.04); }
+  50%      { box-shadow: 0 0 60px var(--glow), 0 0 0 1px rgba(255,255,255,0.08); }
+}
+@keyframes fr-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes fr-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+@keyframes fr-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes fr-gridShift {
+  0% { background-position: 0 0; }
+  100% { background-position: 48px 48px; }
+}
+.fr-section {
+  animation: fr-fadeUp 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.fr-card {
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 320ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 220ms;
+  will-change: transform;
+}
+.fr-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(167, 139, 250, 0.35) !important;
+  box-shadow: 0 14px 50px rgba(0,0,0,0.55),
+              0 0 0 1px rgba(167, 139, 250, 0.18),
+              0 0 60px rgba(167, 139, 250, 0.08);
+}
+.fr-stat:hover {
+  transform: translateY(-2px);
+  border-color: rgba(167, 139, 250, 0.30) !important;
+}
+.fr-stat:hover .fr-stat-val {
+  background-position: 100% 0;
+}
+.fr-row {
+  transition: background-color 180ms ease;
+}
+.fr-row:hover {
+  background-color: rgba(167, 139, 250, 0.06) !important;
+}
+.fr-bar-fill {
+  transform-origin: left center;
+  animation: fr-growBar 1100ms cubic-bezier(0.16, 1, 0.3, 1) 200ms both;
+}
+.fr-arc {
+  animation: fr-drawArc 1300ms cubic-bezier(0.16, 1, 0.3, 1) 250ms both;
+}
+.fr-medal {
+  animation: fr-scaleIn 600ms cubic-bezier(0.16, 1, 0.3, 1) both,
+             fr-pulse 3.5s ease-in-out 600ms infinite;
+}
+.fr-avatar-ring {
+  animation: fr-spin 14s linear infinite;
+}
+`;
 
 function getRankTier(premier) {
   if (!premier) return RANK_TIERS[RANK_TIERS.length - 1];
@@ -16,11 +122,11 @@ function getRankTier(premier) {
 
 function premierColor(rating) {
   if (!rating) return '#94a3b8';
-  if (rating >= 25000) return '#e05252';
-  if (rating >= 20000) return '#ff10d7';
-  if (rating >= 15000) return '#8b5cf6';
+  if (rating >= 25000) return '#ef4444';
+  if (rating >= 20000) return '#ec4899';
+  if (rating >= 15000) return '#a78bfa';
   if (rating >= 10000) return '#3b82f6';
-  if (rating >= 5000)  return '#87b3fa';
+  if (rating >= 5000)  return '#60a5fa';
   return '#94a3b8';
 }
 
@@ -34,56 +140,50 @@ function PremierMedal({ rating }) {
   const small = lastComma >= 0 ? formatted.slice(lastComma + 1) : '';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-      {/* Badge */}
-      <div style={{
-        display: 'flex', alignItems: 'center',
-        background: '#0f1a13',
-        border: `1px solid ${color}55`,
-        borderRadius: '6px',
-        padding: '10px 18px 10px 10px',
-        gap: '10px',
-        boxShadow: `0 0 18px ${color}22, inset 0 0 12px rgba(0,0,0,0.4)`,
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        {/* subtle background glow */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: `radial-gradient(ellipse at 30% 50%, ${color}0f 0%, transparent 70%)`,
-          pointerEvents: 'none',
-        }} />
-        {/* Vertical stripe lines (Leetify style) */}
-        <svg width="17" height="40" viewBox="0 0 17 40" style={{ flexShrink: 0 }}>
-          <path d="M2.5 2.5 L6 2.5 L3.5 37.5 L0 37.5 Z" fill={color} opacity="0.9" />
-          <path d="M8.5 2.5 L12 2.5 L9.5 37.5 L6 37.5 Z" fill={color} opacity="0.6" />
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+      <div
+        className="fr-medal"
+        style={{
+          '--glow': `${color}40`,
+          display: 'inline-flex', alignItems: 'center',
+          background: `linear-gradient(135deg, ${color}1f 0%, #18060a 50%, #0c0408 100%)`,
+          border: `1px solid ${color}55`,
+          borderRadius: '6px',
+          padding: '6px 14px 6px 8px',
+          gap: '8px',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <svg width="14" height="30" viewBox="0 0 14 30" style={{ flexShrink: 0, position: 'relative' }}>
+          <path d="M2 1 L5 1 L3 29 L0 29 Z" fill={color} />
+          <path d="M7 1 L10 1 L8 29 L5 29 Z" fill={color} opacity="0.55" />
         </svg>
-        {/* Number */}
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '1px', position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0px', position: 'relative' }}>
           <span style={{
             fontFamily: 'Barlow Condensed, sans-serif',
-            fontSize: '2.2rem', fontWeight: 800,
-            color, letterSpacing: '0.02em', lineHeight: 1,
+            fontSize: '1.7rem', fontWeight: 800,
+            color, letterSpacing: '0.01em', lineHeight: 1,
           }}>{large}</span>
           <span style={{
             fontFamily: 'Barlow Condensed, sans-serif',
-            fontSize: '1.4rem', fontWeight: 700,
-            color, letterSpacing: '0.02em', lineHeight: 1,
+            fontSize: '1.7rem', fontWeight: 800,
+            color, letterSpacing: '0.01em', lineHeight: 1,
           }}>{small}</span>
         </div>
       </div>
-      {/* Tier label */}
       <div style={{
-        fontSize: '0.65rem', color: '#6b7f6e',
-        textTransform: 'uppercase', letterSpacing: '0.12em',
+        fontSize: '0.62rem', color: T.textMuted,
+        textTransform: 'uppercase', letterSpacing: '0.16em',
+        fontWeight: 600,
       }}>
-        {tier.label} Premier
+        {tier.label} <span style={{ color: T.textDim }}>·</span> Premier
       </div>
     </div>
   );
 }
 
-function RatingBar({ label, value, benchmark, minVal = 0, maxVal = 100, decimals = 0, color = '#d4834a' }) {
+function RatingBar({ label, value, benchmark, minVal = 0, maxVal = 100, decimals = 0, color = T.accent, delay = 0 }) {
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
   const pct = (v) => ((clamp(v, minVal, maxVal) - minVal) / (maxVal - minVal)) * 100;
 
@@ -98,32 +198,42 @@ function RatingBar({ label, value, benchmark, minVal = 0, maxVal = 100, decimals
   };
 
   return (
-    <div style={{ marginBottom: '14px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '5px' }}>
-        <span style={{ fontSize: '0.72rem', color: '#6b7f6e', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'baseline' }}>
+    <div style={{ marginBottom: '18px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '7px' }}>
+        <span style={{ fontSize: '0.72rem', color: T.text2, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 600 }}>{label}</span>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'baseline' }}>
           {benchPct != null && (
-            <span style={{ fontSize: '0.68rem', color: '#4a6350' }}>avg {fmt(benchmark)}</span>
+            <span style={{ fontSize: '0.66rem', color: T.textMuted, letterSpacing: '0.04em' }}>avg {fmt(benchmark)}</span>
           )}
-          <span style={{ fontSize: '0.85rem', fontWeight: 600, color, fontFamily: 'Barlow Condensed, sans-serif' }}>
+          <span style={{ fontSize: '1rem', fontWeight: 700, color, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.02em' }}>
             {fmt(value)}
           </span>
         </div>
       </div>
-      <div style={{ position: 'relative', height: '8px', background: '#162a1c', borderRadius: '4px' }}>
-        <div style={{
-          height: '100%', borderRadius: '3px',
-          width: `${barPct}%`,
-          background: `linear-gradient(90deg, ${color}88, ${color})`,
-          transition: 'width 0.8s ease',
-        }} />
+      <div style={{
+        position: 'relative', height: '10px',
+        background: 'rgba(255,255,255,0.04)',
+        borderRadius: '5px',
+        overflow: 'hidden',
+        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.02)',
+      }}>
+        <div
+          className="fr-bar-fill"
+          style={{
+            height: '100%', borderRadius: '5px',
+            width: `${barPct}%`,
+            background: `linear-gradient(90deg, ${color}55, ${color})`,
+            boxShadow: `0 0 12px ${color}55`,
+            animationDelay: `${delay}ms`,
+          }}
+        />
         {benchPct != null && (
           <div style={{
-            position: 'absolute', top: '-3px', bottom: '-3px',
+            position: 'absolute', top: '-2px', bottom: '-2px',
             left: `${benchPct}%`,
-            width: '2px', background: '#f5f0e8', borderRadius: '1px',
+            width: '2px', background: 'rgba(255,255,255,0.85)', borderRadius: '1px',
             transform: 'translateX(-50%)',
-            boxShadow: '0 0 4px rgba(245,240,232,0.6)',
+            boxShadow: '0 0 6px rgba(255,255,255,0.5)',
           }} />
         )}
       </div>
@@ -131,8 +241,9 @@ function RatingBar({ label, value, benchmark, minVal = 0, maxVal = 100, decimals
   );
 }
 
-function MiniCircle({ label, value, displayValue, fill, unit = '', good, bad, invert = false }) {
-  const SIZE = 88, cx = 44, cy = 48, R = 34, sw = 7;
+function MiniCircle({ label, value, displayValue, fill, unit = '', good, bad, invert = false, delay = 0 }) {
+  const safeId = label.replace(/[^a-zA-Z0-9]/g, '');
+  const SIZE = 104, cx = 52, cy = 56, R = 40, sw = 8;
   const SWEEP = 270;
   const circumference = 2 * Math.PI * R;
   const arcLength = (SWEEP / 360) * circumference;
@@ -150,39 +261,62 @@ function MiniCircle({ label, value, displayValue, fill, unit = '', good, bad, in
 
   const trackPath = describeArc(135, SWEEP);
 
-  let valueColor = '#d4834a';
+  let valueColor = T.accent;
   if (good != null && bad != null) {
     valueColor = invert
-      ? (value <= good ? '#4ade80' : value >= bad ? '#ef4444' : '#d4834a')
-      : (value >= good ? '#4ade80' : value <= bad ? '#ef4444' : '#d4834a');
+      ? (value <= good ? T.good : value >= bad ? T.bad : T.warn)
+      : (value >= good ? T.good : value <= bad ? T.bad : T.warn);
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
       <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
-        <path d={trackPath} fill="none" stroke="#1a2f20" strokeWidth={sw} strokeLinecap="round" />
+        <defs>
+          <linearGradient id={`grad-${safeId}`} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor={valueColor} stopOpacity="0.55" />
+            <stop offset="100%" stopColor={valueColor} stopOpacity="1" />
+          </linearGradient>
+          <filter id={`glow-${safeId}`} x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="2.5" result="b" />
+            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+        <path d={trackPath} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={sw} strokeLinecap="round" />
         <path
-          d={trackPath} fill="none" stroke={valueColor} strokeWidth={sw} strokeLinecap="round"
+          className="fr-arc"
+          style={{
+            '--arc-len': dash,
+            animationDelay: `${delay}ms`,
+          }}
+          d={trackPath}
+          fill="none"
+          stroke={`url(#grad-${safeId})`}
+          strokeWidth={sw}
+          strokeLinecap="round"
           strokeDasharray={`${dash} ${arcLength}`}
+          filter={`url(#glow-${safeId})`}
         />
-        <text x={cx} y={cy + 5} textAnchor="middle" fontSize="12" fontWeight="700" fill="#f5f0e8"
+        <text x={cx} y={cy + 5} textAnchor="middle" fontSize="14" fontWeight="700" fill={T.text}
           style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
           {displayValue ?? '—'}
         </text>
-        {unit && <text x={cx} y={cy + 17} textAnchor="middle" fontSize="7" fill="#6b7f6e">{unit}</text>}
+        {unit && <text x={cx} y={cy + 18} textAnchor="middle" fontSize="8" fill={T.textMuted}>{unit}</text>}
       </svg>
-      <span style={{ fontSize: '0.6rem', color: '#6b7f6e', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>{label}</span>
+      <span style={{ fontSize: '0.62rem', color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em', textAlign: 'center', fontWeight: 600 }}>{label}</span>
     </div>
   );
 }
 
-function TriangleChart({ aim, utility, positioning, tier }) {
-  const W = 200, H = 200, cx = W / 2, cy = H / 2 + 10, maxR = 72;
+function TriangleChart({ aim, utility, positioning, goalTier }) {
+  const [hover, setHover] = useState(null);
+  const W = 280, H = 260, cx = W / 2, cy = H / 2 + 8, maxR = 92;
+  const PLAYER_COLOR = '#ec4899';
+  const GOAL_COLOR = '#a78bfa';
 
   const axes = [
-    { label: 'AIM',         angle: -90, value: aim,         bench: tier.aim },
-    { label: 'POSITIONING', angle:  30, value: positioning,  bench: tier.positioning },
-    { label: 'UTILITY',     angle: 150, value: utility,      bench: tier.utility },
+    { label: 'Aim',          angle: -90, value: aim,          bench: goalTier.aim },
+    { label: 'Utility Usage',angle:  30, value: utility,      bench: goalTier.utility },
+    { label: 'Positioning',  angle: 150, value: positioning,  bench: goalTier.positioning },
   ];
 
   const toPoint = (angle, r) => {
@@ -191,56 +325,239 @@ function TriangleChart({ aim, utility, positioning, tier }) {
   };
 
   const pts = (arr) => arr.map(p => `${p.x},${p.y}`).join(' ');
-  const playerPts = axes.map(a => toPoint(a.angle, (a.value / 100) * maxR));
+  const playerPts = axes.map(a => toPoint(a.angle, ((a.value ?? 0) / 100) * maxR));
   const benchPts  = axes.map(a => toPoint(a.angle, (a.bench / 100) * maxR));
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
-      {[0.25, 0.5, 0.75, 1.0].map(r => (
-        <polygon key={r} points={pts(axes.map(a => toPoint(a.angle, r * maxR)))} fill="none" stroke="#1e3528" strokeWidth="1" />
-      ))}
-      {axes.map((a, i) => {
-        const outer = toPoint(a.angle, maxR);
-        return <line key={i} x1={cx} y1={cy} x2={outer.x} y2={outer.y} stroke="#1e3528" strokeWidth="1" />;
-      })}
-      <polygon points={pts(benchPts)} fill={`${tier.color}22`} stroke={tier.color} strokeWidth="1.5" strokeDasharray="4 3" />
-      <polygon points={pts(playerPts)} fill="#d4834a33" stroke="#d4834a" strokeWidth="2" />
-      {playerPts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="3.5" fill="#d4834a" />)}
-      {axes.map((a, i) => {
-        const lp = toPoint(a.angle, maxR + 14);
+    <div style={{ position: 'relative', width: W, height: H }}>
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
+        <defs>
+          <radialGradient id="tri-player" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={PLAYER_COLOR} stopOpacity="0.42" />
+            <stop offset="100%" stopColor={PLAYER_COLOR} stopOpacity="0.10" />
+          </radialGradient>
+          <radialGradient id="tri-goal" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={GOAL_COLOR} stopOpacity="0.32" />
+            <stop offset="100%" stopColor={GOAL_COLOR} stopOpacity="0.08" />
+          </radialGradient>
+          <filter id="tri-glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3" result="b" />
+            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+        {[0.2, 0.4, 0.6, 0.8, 1.0].map(r => (
+          <polygon key={r} points={pts(axes.map(a => toPoint(a.angle, r * maxR)))} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+        ))}
+        {axes.map((a, i) => {
+          const outer = toPoint(a.angle, maxR);
+          return <line key={i} x1={cx} y1={cy} x2={outer.x} y2={outer.y} stroke="rgba(255,255,255,0.04)" strokeWidth="1" />;
+        })}
+        <polygon points={pts(benchPts)} fill="url(#tri-goal)" stroke={GOAL_COLOR} strokeWidth="2" style={{ animation: 'fr-fadeIn 700ms ease-out 200ms both' }} />
+        <polygon points={pts(playerPts)} fill="url(#tri-player)" stroke={PLAYER_COLOR} strokeWidth="2.2" filter="url(#tri-glow)" style={{ animation: 'fr-fadeIn 900ms ease-out 350ms both' }} />
+        {benchPts.map((p, i) => (
+          <circle
+            key={`g-${i}`} cx={p.x} cy={p.y}
+            r={hover === `g-${i}` ? 6 : 3.5}
+            fill={GOAL_COLOR}
+            style={{
+              cursor: 'pointer',
+              transition: 'r 200ms',
+              filter: hover === `g-${i}` ? `drop-shadow(0 0 10px ${GOAL_COLOR})` : 'none',
+              animation: 'fr-scaleIn 500ms ease-out both', animationDelay: `${400 + i * 70}ms`,
+            }}
+            onMouseEnter={() => setHover(`g-${i}`)}
+            onMouseLeave={() => setHover(null)}
+          />
+        ))}
+        {playerPts.map((p, i) => (
+          <circle
+            key={`p-${i}`} cx={p.x} cy={p.y}
+            r={hover === `p-${i}` ? 6.5 : 4}
+            fill={PLAYER_COLOR}
+            style={{
+              cursor: 'pointer',
+              transition: 'r 200ms',
+              filter: `drop-shadow(0 0 ${hover === `p-${i}` ? 12 : 6}px ${PLAYER_COLOR})`,
+              animation: 'fr-scaleIn 500ms ease-out both', animationDelay: `${550 + i * 80}ms`,
+            }}
+            onMouseEnter={() => setHover(`p-${i}`)}
+            onMouseLeave={() => setHover(null)}
+          />
+        ))}
+        {axes.map((a, i) => {
+          const lp = toPoint(a.angle, maxR + 22);
+          return (
+            <text key={i} x={lp.x} y={lp.y + 4} textAnchor="middle" fontSize="13" fill={T.text2}
+              fontWeight="500"
+              style={{ fontFamily: 'Inter, sans-serif' }}>
+              {a.label}
+            </text>
+          );
+        })}
+      </svg>
+      {hover != null && (() => {
+        const isPlayer = hover.startsWith('p-');
+        const idx = parseInt(hover.split('-')[1], 10);
+        const a = axes[idx];
+        const pt = isPlayer ? playerPts[idx] : benchPts[idx];
+        const color = isPlayer ? PLAYER_COLOR : GOAL_COLOR;
+        const val = isPlayer ? (a.value ?? 0) : a.bench;
         return (
-          <text key={i} x={lp.x} y={lp.y + 4} textAnchor="middle" fontSize="8" fill="#6b7f6e"
-            style={{ fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            {a.label}
-          </text>
+          <div style={{
+            position: 'absolute',
+            left: pt.x, top: pt.y - 14,
+            transform: 'translate(-50%, -100%)',
+            background: '#0e0e1a',
+            border: `1px solid ${color}66`,
+            borderRadius: '6px',
+            padding: '6px 10px',
+            pointerEvents: 'none',
+            whiteSpace: 'nowrap',
+            boxShadow: `0 6px 20px rgba(0,0,0,0.6), 0 0 16px ${color}33`,
+            animation: 'fr-scaleIn 160ms ease-out both',
+            zIndex: 5,
+          }}>
+            <div style={{ fontSize: '0.55rem', color: color, textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 700, marginBottom: '2px' }}>
+              {isPlayer ? 'YOU' : 'GOAL'} · {a.label}
+            </div>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 800, fontSize: '1.1rem', color: T.text, letterSpacing: '0.02em' }}>
+              {val.toFixed(1)}
+            </div>
+          </div>
         );
-      })}
-    </svg>
+      })()}
+    </div>
   );
+}
+
+function TierSelector({ activeTier, onChange }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ position: 'relative', minWidth: '160px' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: '100%',
+          display: 'flex', alignItems: 'center', gap: '10px',
+          background: 'rgba(255,255,255,0.03)',
+          border: `1px solid ${T.border}`,
+          borderRadius: '8px',
+          padding: '8px 12px',
+          color: T.text,
+          cursor: 'pointer',
+          fontFamily: 'Barlow Condensed, sans-serif',
+          fontSize: '0.95rem', fontWeight: 700,
+          letterSpacing: '0.04em',
+          transition: 'border-color 200ms, background 200ms',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderStrong; }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; }}
+      >
+        <svg width="14" height="20" viewBox="0 0 14 20" style={{ flexShrink: 0 }}>
+          <path d="M2 1 L5 1 L3 19 L0 19 Z" fill={activeTier.color} />
+          <path d="M7 1 L10 1 L8 19 L5 19 Z" fill={activeTier.color} opacity="0.55" />
+        </svg>
+        <span style={{ flex: 1, textAlign: 'left', color: activeTier.color }}>{tierRangeLabel(activeTier)}</span>
+        <span style={{ fontSize: '0.7rem', color: T.textMuted, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 200ms' }}>▾</span>
+      </button>
+      {open && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 6px)', right: 0,
+          minWidth: '180px',
+          background: '#0e0e1a',
+          border: `1px solid ${T.borderStrong}`,
+          borderRadius: '8px',
+          padding: '6px',
+          zIndex: 10,
+          boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
+          animation: 'fr-fadeUp 200ms ease-out both',
+        }}>
+          <div style={{ fontSize: '0.55rem', color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.16em', padding: '6px 10px 4px', fontWeight: 700 }}>Matchmaking</div>
+          {RANK_TIERS.slice().reverse().map(t => (
+            <button
+              key={t.label}
+              onClick={() => { onChange(t); setOpen(false); }}
+              style={{
+                width: '100%',
+                display: 'flex', alignItems: 'center', gap: '10px',
+                background: t.label === activeTier.label ? 'rgba(167,139,250,0.08)' : 'transparent',
+                border: 'none', borderRadius: '5px',
+                padding: '8px 10px',
+                color: t.color,
+                cursor: 'pointer',
+                fontFamily: 'Barlow Condensed, sans-serif',
+                fontSize: '0.95rem', fontWeight: 700,
+                letterSpacing: '0.04em',
+                textAlign: 'left',
+                transition: 'background 150ms',
+              }}
+              onMouseEnter={e => { if (t.label !== activeTier.label) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+              onMouseLeave={e => { if (t.label !== activeTier.label) e.currentTarget.style.background = 'transparent'; }}
+            >
+              <svg width="14" height="20" viewBox="0 0 14 20" style={{ flexShrink: 0 }}>
+                <path d="M2 1 L5 1 L3 19 L0 19 Z" fill={t.color} />
+                <path d="M7 1 L10 1 L8 19 L5 19 Z" fill={t.color} opacity="0.55" />
+              </svg>
+              <span>{tierRangeLabel(t)}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function tierRangeLabel(t) {
+  const idx = RANK_TIERS.findIndex(x => x.label === t.label);
+  const upper = idx === 0 ? null : RANK_TIERS[idx - 1].min - 1;
+  const lo = t.min.toLocaleString();
+  if (upper == null) return `${lo}+`;
+  return `${lo} – ${upper.toLocaleString()}`;
 }
 
 function RankLegend({ activeTier }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', justifyContent: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '7px', justifyContent: 'center' }}>
       {RANK_TIERS.map(t => (
-        <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: '6px', opacity: t.label === activeTier.label ? 1 : 0.4 }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: t.color, flexShrink: 0 }} />
-          <span style={{ fontSize: '0.65rem', color: t.label === activeTier.label ? '#f5f0e8' : '#6b7f6e', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}>
+        <div key={t.label} style={{
+          display: 'flex', alignItems: 'center', gap: '8px',
+          opacity: t.label === activeTier.label ? 1 : 0.35,
+          transition: 'opacity 200ms',
+        }}>
+          <div style={{
+            width: '10px', height: '10px', borderRadius: '50%',
+            background: t.color, flexShrink: 0,
+            boxShadow: t.label === activeTier.label ? `0 0 10px ${t.color}` : 'none',
+          }} />
+          <span style={{
+            fontSize: '0.68rem',
+            color: t.label === activeTier.label ? T.text : T.textMuted,
+            fontFamily: 'Barlow Condensed, sans-serif',
+            letterSpacing: '0.08em', fontWeight: 600,
+          }}>
             {t.label}
           </span>
-          {t.label === activeTier.label && <span style={{ fontSize: '0.55rem', color: t.color }}>YOU</span>}
+          {t.label === activeTier.label && (
+            <span style={{
+              fontSize: '0.55rem', color: t.color, fontWeight: 700,
+              padding: '1px 5px', borderRadius: '3px',
+              background: `${t.color}22`,
+              letterSpacing: '0.1em',
+            }}>YOU</span>
+          )}
         </div>
       ))}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-        <div style={{ width: '18px', height: '2px', background: '#d4834a', flexShrink: 0 }} />
-        <span style={{ fontSize: '0.6rem', color: '#d4834a' }}>Player</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', paddingTop: '6px', borderTop: `1px solid ${T.border}` }}>
+        <div style={{ width: '20px', height: '2px', background: T.accent, flexShrink: 0, boxShadow: `0 0 8px ${T.accent}` }} />
+        <span style={{ fontSize: '0.62rem', color: T.accent, letterSpacing: '0.06em' }}>Player</span>
       </div>
     </div>
   );
 }
 
-function MatchHistory({ matches }) {
+function MatchHistory({ matches, visible, onLoadMore }) {
   if (!matches?.length) return null;
+  const shown = matches.slice(0, visible);
 
   const mapName = (m) => (m?.map_name || m?.map || '—').replace('de_', '').replace(/^\w/, c => c.toUpperCase());
 
@@ -251,9 +568,9 @@ function MatchHistory({ matches }) {
   };
 
   const result = (m) => {
-    if (m.outcome === 'win')  return { label: 'W', color: '#4ade80' };
-    if (m.outcome === 'loss') return { label: 'L', color: '#ef4444' };
-    return { label: 'D', color: '#94a3b8' };
+    if (m.outcome === 'win')  return { label: 'W', color: T.good };
+    if (m.outcome === 'loss') return { label: 'L', color: T.bad };
+    return { label: 'D', color: T.text2 };
   };
 
   const fmtDate = (iso) => {
@@ -263,83 +580,215 @@ function MatchHistory({ matches }) {
   };
 
   const ttdColor = (ms) => {
-    if (ms == null) return '#6b7f6e';
-    if (ms < 400) return '#4ade80';
-    if (ms < 600) return '#d4834a';
-    return '#ef4444';
+    if (ms == null) return T.textMuted;
+    if (ms < 400) return T.good;
+    if (ms < 600) return T.warn;
+    return T.bad;
   };
 
   return (
-    <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
+    <div style={{ overflowX: 'auto', margin: '0 -4px' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
         <thead>
-          <tr style={{ borderBottom: '1px solid #1e3528' }}>
+          <tr style={{ borderBottom: `1px solid ${T.border}` }}>
             {['MAP', 'MODE', 'SCORE', 'RES', 'RATING ±', 'TTD', 'HS%', 'ACC', 'DATE'].map(h => (
-              <th key={h} style={{ padding: '8px 10px', color: '#6b8f72', fontWeight: 600, textAlign: h === 'MAP' ? 'left' : 'center', letterSpacing: '0.08em', fontSize: '0.65rem', fontFamily: 'Barlow Condensed, sans-serif' }}>{h}</th>
+              <th key={h} style={{ padding: '10px 12px', color: T.textMuted, fontWeight: 600, textAlign: h === 'MAP' ? 'left' : 'center', letterSpacing: '0.12em', fontSize: '0.62rem', fontFamily: 'Barlow Condensed, sans-serif' }}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {matches.map((m, i) => {
+          {shown.map((m, i) => {
             const r = result(m);
             const rc = (i < matches.length - 1 && m.rank_type === 11 && matches[i].rank > 0 && matches[i + 1].rank > 0)
               ? matches[i].rank - matches[i + 1].rank : null;
             const ttd = m.reaction_time_ms;
 
             return (
-              <tr key={i} style={{ borderBottom: '1px solid #0f1f14' }}
-                onMouseEnter={e => e.currentTarget.style.background = '#1a2f2088'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                <td style={{ padding: '7px 8px', color: '#a0b4a4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}>{mapName(m)}</td>
-                <td style={{ padding: '7px 8px', textAlign: 'center' }}>
+              <tr
+                key={i}
+                className="fr-row"
+                style={{
+                  borderBottom: '1px solid rgba(255,255,255,0.03)',
+                  animation: `fr-fadeUp 500ms ease-out ${i * 40}ms both`,
+                }}
+              >
+                <td style={{ padding: '10px 12px', color: T.text, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em', fontWeight: 600 }}>{mapName(m)}</td>
+                <td style={{ padding: '10px 12px', textAlign: 'center' }}>
                   <span style={{
-                    fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.06em',
-                    padding: '2px 6px', borderRadius: '3px',
-                    background: m.rank_type === 11 ? 'rgba(245,200,66,0.12)' : 'rgba(59,130,246,0.12)',
-                    color: m.rank_type === 11 ? '#f5c842' : '#60a5fa',
+                    fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.1em',
+                    padding: '3px 8px', borderRadius: '4px',
+                    background: m.rank_type === 11 ? 'rgba(251,191,36,0.12)' : 'rgba(96,165,250,0.12)',
+                    color: m.rank_type === 11 ? T.warn : T.ct,
+                    border: `1px solid ${m.rank_type === 11 ? 'rgba(251,191,36,0.25)' : 'rgba(96,165,250,0.25)'}`,
                   }}>
                     {m.rank_type === 11 ? 'PREMIER' : 'COMP'}
                   </span>
                 </td>
-                <td style={{ padding: '7px 8px', textAlign: 'center', color: '#f5f0e8' }}>{score(m)}</td>
-                <td style={{ padding: '7px 8px', textAlign: 'center' }}>
-                  <span style={{ color: result(m).color, fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{result(m).label}</span>
+                <td style={{ padding: '10px 12px', textAlign: 'center', color: T.text }}>{score(m)}</td>
+                <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                  <span style={{
+                    color: r.color, fontWeight: 800, fontFamily: 'Barlow Condensed, sans-serif',
+                    fontSize: '0.95rem', textShadow: `0 0 10px ${r.color}55`,
+                  }}>{r.label}</span>
                 </td>
-                <td style={{ padding: '7px 8px', textAlign: 'center' }}>
+                <td style={{ padding: '10px 12px', textAlign: 'center' }}>
                   {rc != null
-                    ? <span style={{ color: rc >= 0 ? '#4ade80' : '#ef4444', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 600 }}>{rc >= 0 ? '+' : ''}{rc}</span>
-                    : <span style={{ color: '#4a6350' }}>—</span>}
+                    ? <span style={{ color: rc >= 0 ? T.good : T.bad, fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>{rc >= 0 ? '+' : ''}{rc}</span>
+                    : <span style={{ color: T.textDim }}>—</span>}
                 </td>
-                <td style={{ padding: '7px 8px', textAlign: 'center', color: ttdColor(ttd), fontFamily: 'Barlow Condensed, sans-serif' }}>
+                <td style={{ padding: '10px 12px', textAlign: 'center', color: ttdColor(ttd), fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 600 }}>
                   {ttd != null ? `${Math.round(ttd)}ms` : '—'}
                 </td>
-                <td style={{ padding: '7px 8px', textAlign: 'center', color: '#a0b4a4' }}>
+                <td style={{ padding: '10px 12px', textAlign: 'center', color: T.text2 }}>
                   {m.accuracy_head != null ? `${Math.round(m.accuracy_head)}%` : '—'}
                 </td>
-                <td style={{ padding: '7px 8px', textAlign: 'center', color: '#6b7f6e' }}>
+                <td style={{ padding: '10px 12px', textAlign: 'center', color: T.textMuted }}>
                   {m.accuracy_enemy_spotted != null ? `${m.accuracy_enemy_spotted.toFixed(1)}%` : '—'}
                 </td>
-                <td style={{ padding: '7px 8px', textAlign: 'center', color: '#4a6350' }}>{fmtDate(m.finished_at)}</td>
+                <td style={{ padding: '10px 12px', textAlign: 'center', color: T.textDim }}>{fmtDate(m.finished_at)}</td>
               </tr>
             );
           })}
         </tbody>
       </table>
+      {visible < matches.length && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '18px' }}>
+          <button
+            onClick={onLoadMore}
+            style={{
+              background: 'linear-gradient(135deg, rgba(167,139,250,0.12) 0%, rgba(34,211,238,0.10) 100%)',
+              border: `1px solid ${T.borderStrong}`,
+              borderRadius: '8px',
+              padding: '10px 28px',
+              color: T.text,
+              fontFamily: 'Barlow Condensed, sans-serif',
+              fontSize: '0.9rem', fontWeight: 700,
+              letterSpacing: '0.14em', textTransform: 'uppercase',
+              cursor: 'pointer',
+              transition: 'transform 200ms, box-shadow 200ms, border-color 200ms',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(167,139,250,0.25)';
+              e.currentTarget.style.borderColor = T.accent;
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = 'none';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.borderColor = T.borderStrong;
+            }}
+          >
+            Load More <span style={{ color: T.textMuted, marginLeft: '6px' }}>({matches.length - visible})</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatRow({ label, value, suffix = '', decimals = 1, good, bad, invert = false, barMax, delay = 0 }) {
+  const v = value != null ? parseFloat(value) : null;
+  const display = v != null ? `${v.toFixed(decimals)}${suffix}` : '—';
+
+  let color = T.text2;
+  if (v != null && good != null && bad != null) {
+    color = invert
+      ? (v <= good ? T.good : v >= bad ? T.bad : T.warn)
+      : (v >= good ? T.good : v <= bad ? T.bad : T.warn);
+  }
+
+  const bm = barMax ?? (suffix === '%' ? 100 : null);
+  const barPct = bm != null && v != null ? Math.min(100, Math.max(0, (v / bm) * 100)) : null;
+
+  return (
+    <div style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: barPct != null ? '6px' : 0 }}>
+        <span style={{ fontSize: '0.7rem', color: T.text2, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 500 }}>{label}</span>
+        <span style={{ fontSize: '1rem', fontWeight: 700, color, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.02em', textShadow: `0 0 12px ${color}33` }}>{display}</span>
+      </div>
+      {barPct != null && (
+        <div style={{ height: '3px', background: 'rgba(255,255,255,0.04)', borderRadius: '2px', overflow: 'hidden' }}>
+          <div
+            className="fr-bar-fill"
+            style={{
+              height: '100%', width: `${barPct}%`,
+              background: `linear-gradient(90deg, ${color}66, ${color})`,
+              boxShadow: `0 0 8px ${color}66`,
+              borderRadius: '2px',
+              animationDelay: `${delay}ms`,
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SideCompare({ label, ct, t, suffix = '%', decimals = 1, good, bad, invert = false }) {
+  const getColor = (v) => {
+    if (v == null || good == null || bad == null) return T.text2;
+    return invert
+      ? (v <= good ? T.good : v >= bad ? T.bad : T.warn)
+      : (v >= good ? T.good : v <= bad ? T.bad : T.warn);
+  };
+  const fmt = (v) => v != null ? `${v.toFixed(decimals)}${suffix}` : '—';
+
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+      <span style={{ fontSize: '0.7rem', color: T.text2, textTransform: 'uppercase', letterSpacing: '0.1em', flex: 1, fontWeight: 500 }}>{label}</span>
+      <div style={{ display: 'flex', gap: '20px' }}>
+        <div style={{ textAlign: 'right', minWidth: '64px' }}>
+          <div style={{ fontSize: '0.55rem', color: T.ct, letterSpacing: '0.16em', marginBottom: '3px', fontWeight: 700 }}>CT</div>
+          <div style={{ fontSize: '1rem', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: getColor(ct), textShadow: `0 0 12px ${getColor(ct)}33` }}>{fmt(ct)}</div>
+        </div>
+        <div style={{ textAlign: 'right', minWidth: '64px' }}>
+          <div style={{ fontSize: '0.55rem', color: T.tSide, letterSpacing: '0.16em', marginBottom: '3px', fontWeight: 700 }}>T</div>
+          <div style={{ fontSize: '1rem', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: getColor(t), textShadow: `0 0 12px ${getColor(t)}33` }}>{fmt(t)}</div>
+        </div>
+      </div>
     </div>
   );
 }
 
 function StatCard({ label, value, accent }) {
   return (
-    <div style={{
-      background: '#0f1a13', borderRadius: '10px',
-      border: '1px solid #1a2f20',
-      borderTop: accent ? `2px solid ${accent}` : '1px solid #1a2f20',
-      padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px',
-      flex: '1 1 120px',
-    }}>
-      <span style={{ fontSize: '0.6rem', color: '#4a6350', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'Inter, sans-serif' }}>{label}</span>
-      <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1.6rem', fontWeight: 700, color: '#f5f0e8', lineHeight: 1.1 }}>{value}</span>
+    <div
+      className="fr-stat fr-card"
+      style={{
+        background: T.surface,
+        backdropFilter: 'blur(10px)',
+        borderRadius: '12px',
+        border: `1px solid ${T.border}`,
+        borderTop: accent ? `2px solid ${accent}` : `1px solid ${T.border}`,
+        padding: '16px 18px',
+        display: 'flex', flexDirection: 'column', gap: '6px',
+        flex: '1 1 130px',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: '40px',
+        background: accent ? `radial-gradient(ellipse at top, ${accent}14 0%, transparent 70%)` : 'transparent',
+        pointerEvents: 'none',
+      }} />
+      <span style={{ fontSize: '0.6rem', color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.14em', fontFamily: 'Inter, sans-serif', fontWeight: 600, position: 'relative' }}>{label}</span>
+      <span
+        className="fr-stat-val"
+        style={{
+          fontFamily: 'Barlow Condensed, sans-serif',
+          fontSize: '1.85rem', fontWeight: 700, lineHeight: 1.05,
+          letterSpacing: '0.01em',
+          color: T.text,
+          background: accent ? `linear-gradient(120deg, ${T.text} 30%, ${accent} 50%, ${T.text} 70%)` : T.text,
+          backgroundSize: '200% 100%',
+          backgroundPosition: '0% 0',
+          WebkitBackgroundClip: accent ? 'text' : 'unset',
+          WebkitTextFillColor: accent ? 'transparent' : T.text,
+          transition: 'background-position 800ms ease',
+          position: 'relative',
+        }}
+      >{value}</span>
     </div>
   );
 }
@@ -351,6 +800,8 @@ export default function Results({ player }) {
   const hasLeetify = L && L.aim != null;
   const premier = L?.premier ?? null;
   const tier = getRankTier(premier);
+  const [goalTier, setGoalTier] = useState(tier);
+  const [visibleMatches, setVisibleMatches] = useState(15);
 
   const kd = totalDeaths > 0 ? (totalKills / totalDeaths).toFixed(2) : '∞';
   const hsPercent = totalKills > 0 ? Math.round((totalKillsHeadshot / totalKills) * 100) : 0;
@@ -366,147 +817,313 @@ export default function Results({ player }) {
   const preaimFill = preaimDeg != null ? Math.min(100, Math.max(0, ((20 - preaimDeg) / 15) * 100)) : 0;
 
   const sectionTitle = (text, right) => (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-      <span style={{
-        fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700,
-        fontSize: '0.85rem', color: '#a0b4a4',
-        textTransform: 'uppercase', letterSpacing: '0.12em',
-      }}>{text}</span>
-      {right && <span style={{ fontSize: '0.68rem', color: tier.color, letterSpacing: '0.08em' }}>{right}</span>}
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ width: '3px', height: '14px', background: `linear-gradient(180deg, ${T.accent}, ${T.accent2})`, borderRadius: '2px', boxShadow: `0 0 8px ${T.accent}` }} />
+        <span style={{
+          fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700,
+          fontSize: '0.92rem', color: T.text,
+          textTransform: 'uppercase', letterSpacing: '0.16em',
+        }}>{text}</span>
+      </div>
+      {right && <span style={{ fontSize: '0.66rem', color: tier.color, letterSpacing: '0.1em', fontWeight: 600, padding: '3px 10px', background: `${tier.color}14`, border: `1px solid ${tier.color}33`, borderRadius: '4px' }}>{right}</span>}
     </div>
   );
 
-  const card = (children, extraStyle = {}) => (
-    <div style={{
-      background: 'linear-gradient(145deg, #0f1a13 0%, #0a1610 100%)',
-      border: '1px solid #1e3528',
-      borderRadius: '14px',
-      padding: '22px 24px',
-      ...extraStyle,
-    }}>{children}</div>
+  const card = (children, extraStyle = {}, delayMs = 0) => (
+    <div
+      className="fr-card fr-section"
+      style={{
+        background: T.surface,
+        backdropFilter: 'blur(14px)',
+        border: `1px solid ${T.border}`,
+        borderRadius: '16px',
+        padding: '24px 26px',
+        position: 'relative',
+        overflow: 'hidden',
+        animationDelay: `${delayMs}ms`,
+        ...extraStyle,
+      }}
+    >
+      <div style={{
+        position: 'absolute', top: 0, left: '10%', right: '10%', height: '1px',
+        background: `linear-gradient(90deg, transparent, ${T.borderStrong}, transparent)`,
+        pointerEvents: 'none',
+      }} />
+      {children}
+    </div>
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0d1f17', color: '#f5f0e8', fontFamily: 'Inter, sans-serif' }}>
-
-      {/* Header banner */}
+    <>
+      <style>{KEYFRAMES}</style>
       <div style={{
-        borderBottom: `1px solid ${tier.color}33`,
-        background: `linear-gradient(180deg, ${tier.color}08 0%, transparent 100%)`,
+        minHeight: '100vh',
+        background: T.bg,
+        backgroundImage: `
+          radial-gradient(ellipse 80% 50% at 50% -10%, ${tier.color}15 0%, transparent 60%),
+          radial-gradient(ellipse 60% 40% at 100% 100%, ${T.accent}0a 0%, transparent 50%),
+          radial-gradient(ellipse 60% 40% at 0% 100%, ${T.accent2}08 0%, transparent 50%)
+        `,
+        color: T.text,
+        fontFamily: 'Inter, sans-serif',
+        position: 'relative',
+        overflow: 'hidden',
       }}>
-        {/* Thin tier color line at very top */}
-        <div style={{ height: '3px', background: `linear-gradient(90deg, transparent, ${tier.color}, transparent)` }} />
-        <div style={{ maxWidth: '960px', margin: '0 auto', padding: '20px 24px', display: 'flex', alignItems: 'center', gap: '18px' }}>
-          <div style={{ position: 'relative', flexShrink: 0 }}>
-            <img src={avatarUrl} alt={name} style={{
-              width: '60px', height: '60px', borderRadius: '8px',
-              border: `2px solid ${tier.color}88`,
-              display: 'block',
-            }} />
-            <div style={{
-              position: 'absolute', bottom: '-4px', right: '-4px',
-              background: '#0d1f17', borderRadius: '4px',
-              padding: '1px 5px',
-              fontSize: '0.55rem', fontWeight: 700, color: '#6b7f6e',
-              letterSpacing: '0.05em', border: '1px solid #1e3528',
-            }}>LV {level}</div>
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{
-              fontFamily: 'Barlow Condensed, sans-serif',
-              fontSize: '1.8rem', fontWeight: 800,
-              letterSpacing: '0.04em', lineHeight: 1, color: '#f5f0e8',
-            }}>{name}</div>
-            <div style={{ display: 'flex', gap: '16px', marginTop: '5px' }}>
-              {[
-                { v: `${hoursPlayed.toLocaleString()} hrs`, label: 'playtime' },
-                { v: matchesPlayed.toLocaleString(), label: 'matches' },
-                { v: `${winRate}% wr`, label: null },
-              ].map(({ v, label }) => (
-                <span key={v} style={{ fontSize: '0.72rem', color: '#4a6350' }}>
-                  {v}
-                </span>
-              ))}
+
+        {/* Subtle grid overlay */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: `
+            linear-gradient(rgba(167, 139, 250, 0.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(167, 139, 250, 0.025) 1px, transparent 1px)
+          `,
+          backgroundSize: '48px 48px',
+          maskImage: 'radial-gradient(ellipse 60% 40% at 50% 0%, black, transparent)',
+          WebkitMaskImage: 'radial-gradient(ellipse 60% 40% at 50% 0%, black, transparent)',
+          pointerEvents: 'none',
+          animation: 'fr-gridShift 60s linear infinite',
+        }} />
+
+        {/* Header banner */}
+        <div
+          className="fr-section"
+          style={{
+            position: 'relative',
+            borderBottom: `1px solid ${T.border}`,
+            background: `linear-gradient(180deg, ${tier.color}10 0%, transparent 100%)`,
+            animationDelay: '0ms',
+          }}
+        >
+          <div style={{ height: '2px', background: `linear-gradient(90deg, transparent 20%, ${tier.color}, transparent 80%)`, boxShadow: `0 0 20px ${tier.color}` }} />
+          <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '36px 28px', display: 'flex', alignItems: 'center', gap: '28px', flexWrap: 'wrap' }}>
+            {/* Avatar with rotating ring */}
+            <div style={{ position: 'relative', flexShrink: 0, width: '92px', height: '92px' }}>
+              <svg
+                className="fr-avatar-ring"
+                width="92" height="92" viewBox="0 0 92 92"
+                style={{ position: 'absolute', inset: 0 }}
+              >
+                <circle cx="46" cy="46" r="44" fill="none"
+                  stroke={tier.color} strokeWidth="1.5"
+                  strokeDasharray="6 14" opacity="0.6"
+                  style={{ filter: `drop-shadow(0 0 6px ${tier.color})` }}
+                />
+              </svg>
+              <img src={avatarUrl} alt={name} style={{
+                position: 'absolute', top: '6px', left: '6px',
+                width: '80px', height: '80px', borderRadius: '50%',
+                border: `2px solid ${tier.color}`,
+                boxShadow: `0 0 30px ${tier.color}55, 0 6px 20px rgba(0,0,0,0.5)`,
+                display: 'block', objectFit: 'cover',
+              }} />
+              <div style={{
+                position: 'absolute', bottom: '-2px', right: '-2px',
+                background: T.bg2, borderRadius: '6px',
+                padding: '2px 7px',
+                fontSize: '0.6rem', fontWeight: 800, color: T.text,
+                letterSpacing: '0.08em', border: `1px solid ${tier.color}55`,
+                fontFamily: 'Barlow Condensed, sans-serif',
+                boxShadow: `0 0 10px ${tier.color}33`,
+              }}>LV {level}</div>
             </div>
+            <div style={{ flex: 1, minWidth: '200px' }}>
+              <div style={{
+                fontFamily: 'Barlow Condensed, sans-serif',
+                fontSize: '2.4rem', fontWeight: 800,
+                letterSpacing: '0.02em', lineHeight: 1, color: T.text,
+                textShadow: `0 0 24px ${tier.color}33`,
+                animation: 'fr-fadeUp 800ms cubic-bezier(0.16,1,0.3,1) 100ms both',
+              }}>{name}</div>
+              <div style={{
+                display: 'flex', gap: '18px', marginTop: '10px', flexWrap: 'wrap',
+                animation: 'fr-fadeUp 800ms cubic-bezier(0.16,1,0.3,1) 200ms both',
+              }}>
+                {[
+                  { v: `${hoursPlayed.toLocaleString()}h`, label: 'playtime' },
+                  { v: matchesPlayed.toLocaleString(), label: 'matches' },
+                  { v: `${winRate}%`, label: 'win rate' },
+                ].map(({ v, label }) => (
+                  <div key={label} style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '1rem', color: T.text, fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>{v}</span>
+                    <span style={{ fontSize: '0.6rem', color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.14em' }}>{label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {premier != null && <PremierMedal rating={premier} />}
           </div>
-          {premier != null && <PremierMedal rating={premier} />}
+        </div>
+
+        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '28px 28px 100px', display: 'flex', flexDirection: 'column', gap: '18px', position: 'relative' }}>
+
+          {/* Stat Cards */}
+          <div className="fr-section" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', animationDelay: '120ms' }}>
+            <StatCard label="K/D Ratio"    value={kd}                             accent={T.accent} />
+            <StatCard label="Headshot %"   value={`${hsPercent}%`}                accent="#ec4899" />
+            <StatCard label="Accuracy"     value={`${accuracy}%`}                 accent={T.accent2} />
+            <StatCard label="Fav Weapon"   value={favoriteWeapon}                 accent={tier.color} />
+            <StatCard label="Weapon Kills" value={favoriteWeaponKills.toLocaleString()} accent={T.warn} />
+            <StatCard label="Total Kills"  value={totalKills.toLocaleString()}    accent={T.good} />
+          </div>
+
+          {/* Performance Bars */}
+          {hasLeetify && card(<>
+            {sectionTitle('Performance Overview', `${tier.label} benchmarks`)}
+            <RatingBar label="AIM"           value={L.aim}         benchmark={tier.aim}         minVal={0}  maxVal={100} decimals={1} color={T.accent}  delay={0} />
+            <RatingBar label="UTILITY"       value={L.utility}     benchmark={tier.utility}     minVal={0}  maxVal={100} decimals={1} color={T.ct}      delay={100} />
+            <RatingBar label="POSITIONING"   value={L.positioning} benchmark={tier.positioning} minVal={0}  maxVal={100} decimals={1} color={T.accent2} delay={200} />
+            <RatingBar label="OPENING DUELS" value={openingDisplay} benchmark={tier.opening}    minVal={-8} maxVal={8}   decimals={2} color={T.good}    delay={300} />
+            <RatingBar label="CLUTCHING"     value={clutchDisplay}  benchmark={tier.clutch}     minVal={0}  maxVal={25}  decimals={2} color="#ec4899"   delay={400} />
+          </>, {}, 200)}
+
+          {/* Mini Circles + Triangle */}
+          {hasLeetify && (
+            <div className="fr-section" style={{ display: 'flex', gap: '18px', flexWrap: 'wrap', animationDelay: '280ms' }}>
+              {card(<>
+                {sectionTitle('Key Stats')}
+                <div style={{ display: 'flex', gap: '24px', justifyContent: 'center' }}>
+                  <MiniCircle label="Headshot %" value={hsPercent} displayValue={`${hsPercent}%`} fill={hsPercent} good={50} bad={30} delay={0} />
+                  <MiniCircle label="Time to Dmg" value={ttdMs} displayValue={ttdMs != null ? `${Math.round(ttdMs)}` : '—'} unit="ms" fill={ttdFill} delay={150} />
+                  <MiniCircle label="Crosshair°" value={preaimDeg} displayValue={preaimDeg != null ? `${preaimDeg.toFixed(1)}°` : '—'} fill={preaimFill} delay={300} />
+                </div>
+              </>, { flex: '0 0 auto' })}
+
+              {card(<>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', gap: '16px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '3px', height: '14px', background: `linear-gradient(180deg, ${T.accent}, ${T.accent2})`, borderRadius: '2px', boxShadow: `0 0 8px ${T.accent}` }} />
+                    <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, fontSize: '0.92rem', color: T.text, textTransform: 'uppercase', letterSpacing: '0.16em' }}>Performance</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ec4899', boxShadow: '0 0 8px #ec4899' }} />
+                      <span style={{ fontSize: '0.66rem', color: T.text2, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 600 }}>YOU</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#a78bfa', boxShadow: '0 0 8px #a78bfa' }} />
+                      <span style={{ fontSize: '0.66rem', color: T.text2, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 600 }}>GOAL</span>
+                    </div>
+                    <TierSelector activeTier={goalTier} onChange={setGoalTier} />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                  <TriangleChart aim={L.aim} utility={L.utility} positioning={L.positioning} goalTier={goalTier} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-around', gap: '8px', marginTop: '12px', paddingTop: '14px', borderTop: `1px solid ${T.border}` }}>
+                  {[
+                    { label: 'Aim', you: L.aim, goal: goalTier.aim },
+                    { label: 'Utility', you: L.utility, goal: goalTier.utility },
+                    { label: 'Positioning', you: L.positioning, goal: goalTier.positioning },
+                  ].map(({ label, you, goal }) => {
+                    const diff = (you ?? 0) - goal;
+                    const positive = diff >= 0;
+                    return (
+                      <div key={label} style={{ textAlign: 'center', flex: 1 }}>
+                        <div style={{ fontSize: '0.58rem', color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: '4px', fontWeight: 600 }}>{label}</div>
+                        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, fontSize: '0.95rem', color: positive ? T.good : T.bad, letterSpacing: '0.02em' }}>
+                          {positive ? '+' : ''}{diff.toFixed(1)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>, { flex: 1, minWidth: '320px' })}
+            </div>
+          )}
+
+          {/* CT / T Ratings */}
+          {hasLeetify && (L.ctRating != null || L.tRating != null) && (
+            <div className="fr-section" style={{ display: 'flex', gap: '14px', animationDelay: '360ms' }}>
+              {[
+                { label: 'CT Side Rating', value: L.ctRating, color: T.ct, side: 'CT' },
+                { label: 'T Side Rating',  value: L.tRating,  color: T.tSide, side: 'T' },
+              ].filter(x => x.value != null).map(({ label, value, color, side }) =>
+                <div
+                  key={side}
+                  className="fr-card"
+                  style={{
+                    flex: 1,
+                    background: `linear-gradient(135deg, ${color}10 0%, ${T.bg2}cc 100%)`,
+                    backdropFilter: 'blur(12px)',
+                    border: `1px solid ${T.border}`,
+                    borderTop: `2px solid ${color}66`,
+                    borderRadius: '14px',
+                    padding: '22px 26px',
+                    position: 'relative',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div style={{
+                    position: 'absolute', top: 0, right: 0, fontSize: '4.5rem',
+                    fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 800,
+                    color: `${color}10`, lineHeight: 1, padding: '4px 16px',
+                    pointerEvents: 'none',
+                  }}>{side}</div>
+                  <div style={{ fontSize: '0.62rem', color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: '8px', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 600 }}>{label}</div>
+                  <div style={{
+                    fontFamily: 'Barlow Condensed, sans-serif', fontSize: '2.4rem', fontWeight: 800,
+                    color, lineHeight: 1, letterSpacing: '0.02em',
+                    textShadow: `0 0 30px ${color}55`,
+                  }}>{(value * 100).toFixed(1)}</div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Opening Duels + Trades */}
+          {hasLeetify && (L.ctOpeningAggression != null || L.tradeKillsSuccess != null) && (
+            <div className="fr-section" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', animationDelay: '440ms' }}>
+              {L.ctOpeningAggression != null && card(<>
+                {sectionTitle('Opening Duels')}
+                <SideCompare label="Aggression Success" ct={L.ctOpeningAggression} t={L.tOpeningAggression} good={45} bad={28} />
+                <SideCompare label="Duel Win Rate" ct={L.ctOpeningDuel} t={L.tOpeningDuel} good={52} bad={38} />
+              </>, { flex: 1, minWidth: '260px' })}
+
+              {L.tradeKillsSuccess != null && card(<>
+                {sectionTitle('Trades')}
+                <StatRow label="Trade Kills Success" value={L.tradeKillsSuccess} suffix="%" good={55} bad={40} delay={0} />
+                <StatRow label="Trade Deaths Success" value={L.tradedDeathsSuccess} suffix="%" good={55} bad={40} delay={100} />
+                <StatRow label="Kill Opportunities / Round" value={L.tradeKillOpps} suffix="" decimals={2} good={0.35} bad={0.20} barMax={0.6} delay={200} />
+              </>, { flex: 1, minWidth: '260px' })}
+            </div>
+          )}
+
+          {/* Grenades & Utility */}
+          {hasLeetify && (L.flashHitFoePerFlash != null || L.heFoesDmg != null) && card(<>
+            {sectionTitle('Grenades & Utility')}
+            <div style={{ display: 'flex', gap: '44px', flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: '240px' }}>
+                <div style={{ fontSize: '0.62rem', color: T.accent, textTransform: 'uppercase', letterSpacing: '0.16em', marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>Flashbangs</div>
+                <StatRow label="Thrown / Match" value={L.flashThrown} suffix="" decimals={1} good={10} bad={4} barMax={20} delay={0} />
+                <StatRow label="Enemies Flashed / Flash" value={L.flashHitFoePerFlash} suffix="" decimals={2} good={0.8} bad={0.3} barMax={1.5} delay={80} />
+                <StatRow label="Avg Flash Duration" value={L.flashHitFoeDuration} suffix="s" decimals={2} good={2.0} bad={1.0} barMax={3.5} delay={160} />
+                <StatRow label="Teammates Flashed / Flash" value={L.flashHitFriendPerFlash} suffix="" decimals={2} good={0.1} bad={0.3} invert={true} barMax={0.8} delay={240} />
+                <StatRow label="Flash → Kill %" value={L.flashLeadToKill} suffix="%" decimals={1} good={15} bad={5} delay={320} />
+              </div>
+              <div style={{ flex: 1, minWidth: '240px' }}>
+                <div style={{ fontSize: '0.62rem', color: T.accent2, textTransform: 'uppercase', letterSpacing: '0.16em', marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>HE Grenades & Aim</div>
+                <StatRow label="HE Avg Dmg (Enemies)" value={L.heFoesDmg} suffix="" decimals={1} good={10} bad={4} barMax={25} delay={0} />
+                <StatRow label="HE Avg Dmg (Friendlies)" value={L.heFriendsDmg} suffix="" decimals={2} good={0.5} bad={2} invert={true} barMax={5} delay={80} />
+                <StatRow label="Counter-Strafing" value={L.counterStrafing} suffix="%" decimals={1} good={65} bad={45} delay={160} />
+                <StatRow label="Utility on Death" value={L.utilityOnDeath} suffix="$" decimals={0} good={100} bad={250} invert={true} barMax={500} delay={240} />
+              </div>
+            </div>
+          </>, {}, 520)}
+
+          {/* Match History */}
+          {hasLeetify && L.recentMatches?.length > 0 && card(<>
+            {sectionTitle('Recent Matches', `${Math.min(visibleMatches, L.recentMatches.length)} / ${L.recentMatches.length}`)}
+            <MatchHistory matches={L.recentMatches} visible={visibleMatches} onLoadMore={() => setVisibleMatches(v => Math.min(v + 15, L.recentMatches.length))} />
+          </>, {}, 600)}
+
+          {!hasLeetify && card(
+            <div style={{ textAlign: 'center', color: T.textMuted, fontSize: '0.9rem', padding: '20px 0' }}>
+              Leetify data unavailable — player may not be on Leetify.
+            </div>
+          )}
         </div>
       </div>
-
-      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '24px 24px 80px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-        {/* Stat Cards */}
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <StatCard label="K/D Ratio"    value={kd}                             accent="#d4834a" />
-          <StatCard label="Headshot %"   value={`${hsPercent}%`}                accent="#f472b6" />
-          <StatCard label="Accuracy"     value={`${accuracy}%`}                 />
-          <StatCard label="Fav Weapon"   value={favoriteWeapon}                 accent={tier.color} />
-          <StatCard label="Weapon Kills" value={favoriteWeaponKills.toLocaleString()} />
-          <StatCard label="Total Kills"  value={totalKills.toLocaleString()}    />
-        </div>
-
-        {/* Performance Bars */}
-        {hasLeetify && card(<>
-          {sectionTitle('Performance Overview', `${tier.label} benchmarks`)}
-          <RatingBar label="AIM"           value={L.aim}         benchmark={tier.aim}         minVal={0}  maxVal={100} decimals={1} color="#d4834a" />
-          <RatingBar label="UTILITY"       value={L.utility}     benchmark={tier.utility}     minVal={0}  maxVal={100} decimals={1} color="#60a5fa" />
-          <RatingBar label="POSITIONING"   value={L.positioning} benchmark={tier.positioning} minVal={0}  maxVal={100} decimals={1} color="#a78bfa" />
-          <RatingBar label="OPENING DUELS" value={openingDisplay} benchmark={tier.opening}    minVal={-8} maxVal={8}   decimals={2} color="#4ade80" />
-          <RatingBar label="CLUTCHING"     value={clutchDisplay}  benchmark={tier.clutch}     minVal={0}  maxVal={25}  decimals={2} color="#f472b6" />
-        </>)}
-
-        {/* Mini Circles + Triangle */}
-        {hasLeetify && (
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-            {card(<>
-              {sectionTitle('Key Stats')}
-              <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-                <MiniCircle label="Headshot %" value={hsPercent} displayValue={`${hsPercent}%`} fill={hsPercent} good={50} bad={30} />
-                <MiniCircle label="Time to Dmg" value={ttdMs} displayValue={ttdMs != null ? `${Math.round(ttdMs)}` : '—'} unit="ms" fill={ttdFill} />
-                <MiniCircle label="Crosshair°" value={preaimDeg} displayValue={preaimDeg != null ? `${preaimDeg.toFixed(1)}°` : '—'} fill={preaimFill} />
-              </div>
-            </>, { flex: '0 0 auto' })}
-
-            {card(<>
-              {sectionTitle('Performance Profile')}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
-                <TriangleChart aim={L.aim} utility={L.utility} positioning={L.positioning} tier={tier} />
-                <RankLegend activeTier={tier} />
-              </div>
-            </>, { flex: 1, minWidth: '260px' })}
-          </div>
-        )}
-
-        {/* CT / T Ratings */}
-        {hasLeetify && (L.ctRating != null || L.tRating != null) && (
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {[
-              { label: 'CT Side Rating', value: L.ctRating, color: '#60a5fa' },
-              { label: 'T Side Rating',  value: L.tRating,  color: '#f59e0b' },
-            ].filter(x => x.value != null).map(({ label, value, color }) =>
-              card(
-                <>
-                  <div style={{ fontSize: '0.62rem', color: '#4a6350', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>{label}</div>
-                  <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '2rem', fontWeight: 800, color, lineHeight: 1 }}>{(value * 100).toFixed(1)}</div>
-                </>,
-                { flex: 1, borderTop: `2px solid ${color}55` }
-              )
-            )}
-          </div>
-        )}
-
-        {/* Match History */}
-        {hasLeetify && L.recentMatches?.length > 0 && card(<>
-          {sectionTitle('Recent Matches')}
-          <MatchHistory matches={L.recentMatches} />
-        </>)}
-
-        {!hasLeetify && card(
-          <div style={{ textAlign: 'center', color: '#4a6350', fontSize: '0.85rem', padding: '12px 0' }}>
-            Leetify data unavailable — player may not be on Leetify.
-          </div>
-        )}
-      </div>
-    </div>
+    </>
   );
 }
