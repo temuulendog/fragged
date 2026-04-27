@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.0] — 2026-04-27
+
+Full migration to the Cloudflare stack and a new permanent home at **csstat.com**.
+
+### Added
+- Custom domain **csstat.com** (registered through Cloudflare; both apex and `www` resolve)
+- Cloudflare Workers backend at `fragged-api.temuuleng23.workers.dev` — replaces the Express+Render setup
+- `wrangler.toml` and `src/index.js` Worker entry point in `backend/`
+
+### Changed
+- **Backend** rewritten from Express to a Cloudflare Workers `fetch` handler — same routes, same response shape, same Steam + Leetify fan-out, but using the platform's native `fetch` instead of `axios`
+- **Frontend hosting** moved from Vercel to Cloudflare Pages (auto-deploys from `main`)
+- `STEAM_API_KEY` is now a Cloudflare Worker secret instead of a `.env` file
+- Project structure updated — `backend/server.js` removed; entry point is now `backend/src/index.js`
+- README + deployment docs updated to reflect the Cloudflare stack
+
+### Removed
+- Express, axios, dotenv, cors dependencies from the backend (replaced by native Workers APIs)
+- Vercel + Render deploys (services decommissioned)
+
+### Performance
+- **No more cold starts** — Workers respond in ~10ms instead of the 30–50s wakeup that Render's free tier imposed after 15 min idle
+- Edge-deployed: requests are served from the closest of Cloudflare's 300+ PoPs instead of a single Render region
+
+---
+
 ## [1.1.0] — 2026-04-27
 
 A deep stats expansion and a complete visual redesign of the player results page.
@@ -68,5 +94,6 @@ Initial public release.
 
 ---
 
+[1.2.0]: https://github.com/temuulendog/fragged/releases/tag/v1.2.0
 [1.1.0]: https://github.com/temuulendog/fragged/releases/tag/v1.1.0
 [1.0.0]: https://github.com/temuulendog/fragged/releases/tag/v1.0.0

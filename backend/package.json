@@ -1,20 +1,14 @@
 {
-  "name": "cs2-roaster-backend",
-  "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
+  "name": "fragged-api",
+  "version": "2.0.0",
+  "description": "FRAGGED backend on Cloudflare Workers",
+  "main": "src/index.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "type": "module",
-  "dependencies": {
-    "axios": "^1.15.2",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1"
+  "devDependencies": {
+    "wrangler": "^4.0.0"
   }
 }

@@ -1,10 +1,10 @@
 # FRAGGED — CS2 Stats Viewer
 
-[![Version](https://img.shields.io/badge/version-1.1.0-a78bfa)](./CHANGELOG.md)
-[![Live](https://img.shields.io/badge/live-fragged.vercel.app-ec4899)](https://fragged.vercel.app)
-[![Stack](https://img.shields.io/badge/stack-React%20%7C%20Vite%20%7C%20Express-22d3ee)](#stack)
+[![Version](https://img.shields.io/badge/version-1.2.0-a78bfa)](./CHANGELOG.md)
+[![Live](https://img.shields.io/badge/live-www.csstat.com-ec4899)](https://www.csstat.com)
+[![Stack](https://img.shields.io/badge/stack-React%20%7C%20Vite%20%7C%20Cloudflare-22d3ee)](#stack)
 
-**Live → [fragged.vercel.app](https://fragged.vercel.app)**
+**Live → [www.csstat.com](https://www.csstat.com)**
 
 Look up any CS2 player and get a deep breakdown of how they actually play — pulled live from Steam and Leetify. No account needed.
 
@@ -44,8 +44,9 @@ Look up any CS2 player and get a deep breakdown of how they actually play — pu
 
 | Layer | Tech |
 |---|---|
-| Frontend | React 18 + Vite, deployed on Vercel |
-| Backend | Node.js + Express, deployed on Render |
+| Frontend | React 18 + Vite, deployed on Cloudflare Pages |
+| Backend | Cloudflare Workers (`fetch` handler, native `fetch` for outbound) |
+| Domain / DNS | Cloudflare Registrar — `csstat.com` |
 | Data | Steam Web API + Leetify public API |
 | Styling | Inline styles, custom keyframes |
 
@@ -55,22 +56,22 @@ Look up any CS2 player and get a deep breakdown of how they actually play — pu
 
 | Service | Host | Trigger |
 |---|---|---|
-| Frontend | Vercel | auto-deploys on push to `main` |
-| Backend | Render (free tier) | auto-deploys on push to `main` |
+| Frontend | Cloudflare Pages | auto-deploys on push to `main` |
+| Backend | Cloudflare Workers | `wrangler deploy` from `backend/` |
 
-Render's free tier sleeps the backend after 15 min of inactivity — first request after that takes ~30–50 s to wake up.
+Both run on Cloudflare's edge network — no cold starts, sub-second response times globally.
 
 ---
 
 ## Running locally
 
-**Backend**
+**Backend** (Cloudflare Workers via `wrangler dev`)
 ```bash
 cd backend
-cp .env.example .env
-# add your Steam API key — get one free at steamcommunity.com/dev/apikey
 npm install
-node server.js              # runs on http://localhost:3001
+echo 'STEAM_API_KEY="your_key_here"' > .dev.vars
+# get a free Steam API key at steamcommunity.com/dev/apikey
+npx wrangler dev            # runs on http://localhost:8787
 ```
 
 **Frontend**
@@ -80,7 +81,10 @@ npm install
 npm run dev                 # runs on http://localhost:5173
 ```
 
-The frontend reads `VITE_API_URL` for the backend address; locally it falls back to `localhost:3001` automatically.
+For local dev, point the frontend at the local Worker by creating `frontend/.env.local`:
+```
+VITE_API_URL=http://localhost:8787
+```
 
 > Steam profiles must be set to **public**. Leetify data only shows for players registered on [leetify.com](https://leetify.com).
 
@@ -88,15 +92,19 @@ The frontend reads `VITE_API_URL` for the backend address; locally it falls back
 
 ## Environment variables
 
-**Backend** (`.env`)
-```
-STEAM_API_KEY=your_key_here
-PORT=3001
+**Backend** — production secret stored in Cloudflare:
+```bash
+npx wrangler secret put STEAM_API_KEY
 ```
 
-**Frontend** (Vercel dashboard or `.env.local`)
+For local dev, put it in `backend/.dev.vars` (gitignored):
 ```
-VITE_API_URL=https://your-backend.onrender.com
+STEAM_API_KEY="your_key_here"
+```
+
+**Frontend** (Cloudflare Pages dashboard → Settings → Variables, or `.env.local`)
+```
+VITE_API_URL=https://fragged-api.<your-subdomain>.workers.dev
 ```
 
 ---
@@ -105,9 +113,10 @@ VITE_API_URL=https://your-backend.onrender.com
 
 ```
 fragged/
-├── backend/                # Node.js + Express
-│   ├── server.js           # API logic, Steam + Leetify fan-out
-│   ├── .env.example
+├── backend/                # Cloudflare Worker
+│   ├── src/
+│   │   └── index.js        # API logic, Steam + Leetify fan-out
+│   ├── wrangler.toml       # Worker config
 │   └── package.json
 ├── frontend/               # React + Vite
 │   ├── src/
