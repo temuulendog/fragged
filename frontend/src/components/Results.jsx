@@ -753,44 +753,6 @@ function SideCompare({ label, ct, t, suffix = '%', decimals = 1, good, bad, inve
 const LEETIFY_PINK = '#F84982';
 const FACEIT_ORANGE = '#FF5500';
 
-function LeetifyAttribution({ steamId }) {
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      flexWrap: 'wrap', gap: '12px',
-      marginTop: '14px', paddingTop: '12px',
-      borderTop: `1px solid ${T.border}`,
-    }}>
-      <a
-        href="https://leetify.com/"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          display: 'flex', alignItems: 'center', gap: '8px',
-          color: T.textMuted, textDecoration: 'none',
-          fontSize: '0.7rem', letterSpacing: '0.06em',
-        }}
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill={LEETIFY_PINK} style={{ flexShrink: 0 }}>
-          <path d="M3 3h4v14h10v4H3V3z" />
-        </svg>
-        <span>Data Provided by <span style={{ color: LEETIFY_PINK, fontWeight: 700 }}>Leetify</span></span>
-      </a>
-      <a
-        href={`https://leetify.com/app/profile/${steamId}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          color: LEETIFY_PINK, textDecoration: 'underline',
-          fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.06em',
-        }}
-      >
-        View on Leetify →
-      </a>
-    </div>
-  );
-}
-
 function FraggedAimCard({ aim, confidence }) {
   const color = aim >= 70 ? T.good : aim >= 45 ? T.warn : T.bad;
   const sourceLabel = confidence === 'faceit' ? 'Faceit + Steam aggregates' : 'Steam aggregates only';
@@ -1209,6 +1171,49 @@ export default function Results({ player }) {
             <StatCard label="Total Kills"  value={totalKills.toLocaleString()}    accent={T.good} />
           </div>
 
+          {/* Leetify attribution banner — appears immediately above Leetify-sourced data */}
+          {hasLeetify && (
+            <div
+              className="fr-section"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                flexWrap: 'wrap', gap: '12px',
+                padding: '10px 18px',
+                background: `linear-gradient(90deg, ${LEETIFY_PINK}14 0%, transparent 100%)`,
+                border: `1px solid ${LEETIFY_PINK}33`,
+                borderRadius: '10px',
+                animationDelay: '160ms',
+              }}
+            >
+              <a
+                href="https://leetify.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  color: T.text2, textDecoration: 'none',
+                  fontSize: '0.72rem', letterSpacing: '0.06em', fontWeight: 600,
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill={LEETIFY_PINK} style={{ flexShrink: 0 }}>
+                  <path d="M3 3h4v14h10v4H3V3z" />
+                </svg>
+                <span>Data Provided by <span style={{ color: LEETIFY_PINK, fontWeight: 800 }}>Leetify</span></span>
+              </a>
+              <a
+                href={`https://leetify.com/app/profile/${steamId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: LEETIFY_PINK, textDecoration: 'underline',
+                  fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.06em',
+                }}
+              >
+                View on Leetify →
+              </a>
+            </div>
+          )}
+
           {/* Performance Bars */}
           {hasLeetify && card(<>
             {sectionTitle('Performance Overview', `${tier.label} benchmarks`)}
@@ -1359,18 +1364,16 @@ export default function Results({ player }) {
             <MatchHistory matches={L.recentMatches} visible={visibleMatches} onLoadMore={() => setVisibleMatches(v => Math.min(v + 15, L.recentMatches.length))} />
           </>, {}, 600)}
 
-          {/* Leetify attribution — required when Leetify data shown */}
-          {hasLeetify && card(<LeetifyAttribution steamId={steamId} />, { padding: '16px 22px' }, 700)}
-
-          {/* FRAGGED Aim + Faceit fallback layer when no Leetify */}
+          {/* FRAGGED Aim — only when there is no Leetify rating (otherwise redundant) */}
           {!hasLeetify && fragged && (
             <FraggedAimCard aim={fragged.aim} confidence={fragged.confidence} />
           )}
 
-          {!hasLeetify && faceit && <FaceitCard faceit={faceit} />}
+          {/* Faceit card — useful regardless of Leetify; shows when Faceit data exists */}
+          {faceit && <FaceitCard faceit={faceit} />}
 
-          {/* Weapon Affinity — show when no Leetify (tier 2/3 enrichment) */}
-          {!hasLeetify && affinity && <WeaponAffinity affinity={affinity} />}
+          {/* Weapon Affinity — universal Steam-derived enrichment */}
+          {affinity && <WeaponAffinity affinity={affinity} />}
 
           {!hasLeetify && !faceit && card(
             <div style={{ textAlign: 'center', color: T.textMuted, fontSize: '0.85rem', padding: '14px 0', lineHeight: 1.5 }}>
