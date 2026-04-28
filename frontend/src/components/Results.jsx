@@ -1224,6 +1224,9 @@ export default function Results({ player }) {
             <RatingBar label="CLUTCHING"     value={clutchDisplay}  benchmark={tier.clutch}     minVal={0}  maxVal={25}  decimals={2} color="#ec4899"   delay={400} />
           </>, {}, 200)}
 
+          {/* Faceit card placed directly under Performance Overview */}
+          {hasLeetify && faceit && <FaceitCard faceit={faceit} />}
+
           {/* Mini Circles + Triangle */}
           {hasLeetify && (
             <div className="fr-section" style={{ display: 'flex', gap: '18px', flexWrap: 'wrap', animationDelay: '280ms' }}>
@@ -1369,8 +1372,8 @@ export default function Results({ player }) {
             <FraggedAimCard aim={fragged.aim} confidence={fragged.confidence} />
           )}
 
-          {/* Faceit card — useful regardless of Leetify; shows when Faceit data exists */}
-          {faceit && <FaceitCard faceit={faceit} />}
+          {/* Faceit card for non-Leetify users (Leetify users see it under Performance Overview above) */}
+          {!hasLeetify && faceit && <FaceitCard faceit={faceit} />}
 
           {/* Weapon Affinity — universal Steam-derived enrichment */}
           {affinity && <WeaponAffinity affinity={affinity} />}
