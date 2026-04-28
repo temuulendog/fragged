@@ -750,6 +750,248 @@ function SideCompare({ label, ct, t, suffix = '%', decimals = 1, good, bad, inve
   );
 }
 
+const LEETIFY_PINK = '#F84982';
+const FACEIT_ORANGE = '#FF5500';
+
+function LeetifyAttribution({ steamId }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      flexWrap: 'wrap', gap: '12px',
+      marginTop: '14px', paddingTop: '12px',
+      borderTop: `1px solid ${T.border}`,
+    }}>
+      <a
+        href="https://leetify.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          display: 'flex', alignItems: 'center', gap: '8px',
+          color: T.textMuted, textDecoration: 'none',
+          fontSize: '0.7rem', letterSpacing: '0.06em',
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill={LEETIFY_PINK} style={{ flexShrink: 0 }}>
+          <path d="M3 3h4v14h10v4H3V3z" />
+        </svg>
+        <span>Data Provided by <span style={{ color: LEETIFY_PINK, fontWeight: 700 }}>Leetify</span></span>
+      </a>
+      <a
+        href={`https://leetify.com/app/profile/${steamId}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          color: LEETIFY_PINK, textDecoration: 'underline',
+          fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.06em',
+        }}
+      >
+        View on Leetify →
+      </a>
+    </div>
+  );
+}
+
+function FraggedAimCard({ aim, confidence }) {
+  const color = aim >= 70 ? T.good : aim >= 45 ? T.warn : T.bad;
+  const sourceLabel = confidence === 'faceit' ? 'Faceit + Steam aggregates' : 'Steam aggregates only';
+  const tooltip = confidence === 'faceit'
+    ? 'FRAGGED Aim is computed from Faceit lifetime ADR / KD / HS%, blended with Steam HS% and accuracy. Not the same metric as Leetify Aim.'
+    : 'FRAGGED Aim is computed from Steam lifetime HS%, accuracy, and K/D. Less accurate than Faceit-backed score. Not the same metric as Leetify Aim.';
+
+  return (
+    <div
+      className="fr-card fr-section"
+      style={{
+        background: T.surface,
+        backdropFilter: 'blur(14px)',
+        border: `1px solid ${T.border}`,
+        borderTop: `2px solid ${color}66`,
+        borderRadius: '16px',
+        padding: '22px 24px',
+        animationDelay: '180ms',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+        <div style={{ width: '3px', height: '14px', background: `linear-gradient(180deg, ${T.accent}, ${T.accent2})`, borderRadius: '2px' }} />
+        <span style={{
+          fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700,
+          fontSize: '0.92rem', color: T.text,
+          textTransform: 'uppercase', letterSpacing: '0.16em',
+        }}>FRAGGED Aim</span>
+        <span style={{ fontSize: '0.6rem', color: T.textMuted, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+          ({sourceLabel})
+        </span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', flexWrap: 'wrap' }}>
+        <div style={{
+          fontFamily: 'Barlow Condensed, sans-serif', fontSize: '3rem',
+          fontWeight: 800, color, lineHeight: 1,
+          textShadow: `0 0 30px ${color}55`,
+        }}>{aim}</div>
+        <div style={{ fontSize: '0.7rem', color: T.textMuted }}>/ 100</div>
+      </div>
+      <div style={{ marginTop: '12px', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
+        <div style={{
+          height: '100%', width: `${aim}%`, background: `linear-gradient(90deg, ${color}88, ${color})`,
+          boxShadow: `0 0 12px ${color}66`,
+          animation: 'fr-growBar 1000ms cubic-bezier(0.16, 1, 0.3, 1) both',
+          transformOrigin: 'left center',
+        }} />
+      </div>
+      <div style={{ marginTop: '10px', fontSize: '0.66rem', color: T.textMuted, lineHeight: 1.45 }}>
+        {tooltip}
+      </div>
+    </div>
+  );
+}
+
+function FaceitCard({ faceit }) {
+  const levelColor = faceit.level >= 9 ? '#ff5500' : faceit.level >= 6 ? '#fbbf24' : faceit.level >= 3 ? '#60a5fa' : '#94a3b8';
+  const recent = faceit.recentResults || [];
+
+  return (
+    <div
+      className="fr-card fr-section"
+      style={{
+        background: T.surface,
+        backdropFilter: 'blur(14px)',
+        border: `1px solid ${T.border}`,
+        borderTop: `2px solid ${FACEIT_ORANGE}55`,
+        borderRadius: '16px',
+        padding: '22px 24px',
+        animationDelay: '220ms',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '3px', height: '14px', background: FACEIT_ORANGE, borderRadius: '2px', boxShadow: `0 0 8px ${FACEIT_ORANGE}` }} />
+          <span style={{
+            fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 800,
+            fontSize: '1rem', color: FACEIT_ORANGE,
+            textTransform: 'uppercase', letterSpacing: '0.16em',
+          }}>FACEIT</span>
+          <span style={{ color: T.text, fontSize: '0.85rem', fontWeight: 600 }}>{faceit.nickname}</span>
+        </div>
+        <a
+          href={`https://www.faceit.com/en/players/${faceit.nickname}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: FACEIT_ORANGE, textDecoration: 'underline', fontSize: '0.7rem', fontWeight: 700 }}
+        >
+          View on Faceit →
+        </a>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))',
+        gap: '14px',
+      }}>
+        {[
+          { label: 'Level', value: faceit.level ? `LV ${faceit.level}` : '—', color: levelColor },
+          { label: 'Elo', value: faceit.elo?.toLocaleString() || '—' },
+          { label: 'Region', value: faceit.region || '—' },
+          { label: 'Avg K/D', value: faceit.kdAvg?.toFixed(2) || '—' },
+          { label: 'Avg HS%', value: faceit.hsAvg != null ? `${faceit.hsAvg}%` : '—' },
+          { label: 'ADR', value: faceit.adr?.toFixed(1) || '—' },
+          { label: 'Win Rate', value: faceit.winRate != null ? `${faceit.winRate}%` : '—' },
+          { label: 'Matches', value: faceit.totalMatches?.toLocaleString() || '—' },
+          { label: '1v1 Win', value: faceit.clutch1v1 != null ? `${Math.round(faceit.clutch1v1 * 100)}%` : '—' },
+          { label: '1v2 Win', value: faceit.clutch1v2 != null ? `${Math.round(faceit.clutch1v2 * 100)}%` : '—' },
+          { label: 'Entry Win', value: faceit.entrySuccessRate != null ? `${Math.round(faceit.entrySuccessRate * 100)}%` : '—' },
+          { label: 'Util DMG/R', value: faceit.utilDmgPerRound?.toFixed(1) || '—' },
+        ].map(({ label, value, color }) => (
+          <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <span style={{ fontSize: '0.58rem', color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 600 }}>{label}</span>
+            <span style={{
+              fontFamily: 'Barlow Condensed, sans-serif',
+              fontSize: '1.25rem', fontWeight: 700, lineHeight: 1.05,
+              color: color || T.text,
+              textShadow: color ? `0 0 14px ${color}55` : 'none',
+            }}>{value}</span>
+          </div>
+        ))}
+      </div>
+
+      {recent.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '16px', paddingTop: '12px', borderTop: `1px solid ${T.border}` }}>
+          <span style={{ fontSize: '0.6rem', color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 600 }}>Recent</span>
+          <div style={{ display: 'flex', gap: '5px' }}>
+            {recent.map((r, i) => {
+              const isWin = r === '1' || r === 1;
+              return (
+                <div key={i} style={{
+                  width: '22px', height: '22px', borderRadius: '4px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: 'Barlow Condensed, sans-serif', fontSize: '0.75rem', fontWeight: 800,
+                  background: isWin ? `${T.good}22` : `${T.bad}22`,
+                  border: `1px solid ${isWin ? T.good : T.bad}55`,
+                  color: isWin ? T.good : T.bad,
+                }}>{isWin ? 'W' : 'L'}</div>
+              );
+            })}
+          </div>
+          {faceit.bestMap && (
+            <span style={{ marginLeft: 'auto', fontSize: '0.7rem', color: T.text2 }}>
+              Best map: <span style={{ color: T.good, fontWeight: 700 }}>{faceit.bestMap.name}</span> ({faceit.bestMap.winRate}%)
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function WeaponAffinity({ affinity }) {
+  const items = [
+    { label: 'Rifle', value: affinity.rifle, color: T.accent },
+    { label: 'Sniper', value: affinity.sniper, color: T.accent2 },
+    { label: 'Pistol', value: affinity.pistol, color: T.warn },
+    { label: 'SMG', value: affinity.smg, color: T.good },
+  ];
+  return (
+    <div
+      className="fr-card fr-section"
+      style={{
+        background: T.surface,
+        backdropFilter: 'blur(14px)',
+        border: `1px solid ${T.border}`,
+        borderRadius: '16px',
+        padding: '22px 24px',
+        animationDelay: '260ms',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+        <div style={{ width: '3px', height: '14px', background: `linear-gradient(180deg, ${T.accent}, ${T.accent2})`, borderRadius: '2px' }} />
+        <span style={{
+          fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700,
+          fontSize: '0.92rem', color: T.text,
+          textTransform: 'uppercase', letterSpacing: '0.16em',
+        }}>Weapon Affinity</span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {items.map(({ label, value, color }) => (
+          <div key={label}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <span style={{ fontSize: '0.7rem', color: T.text2, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</span>
+              <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '0.95rem', fontWeight: 700, color }}>{value}%</span>
+            </div>
+            <div style={{ height: '6px', background: 'rgba(255,255,255,0.04)', borderRadius: '3px', overflow: 'hidden' }}>
+              <div style={{
+                height: '100%', width: `${value}%`,
+                background: `linear-gradient(90deg, ${color}88, ${color})`,
+                boxShadow: `0 0 8px ${color}55`,
+                animation: 'fr-growBar 900ms cubic-bezier(0.16, 1, 0.3, 1) both',
+                transformOrigin: 'left center',
+              }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function StatCard({ label, value, accent }) {
   return (
     <div
@@ -794,7 +1036,7 @@ function StatCard({ label, value, accent }) {
 }
 
 export default function Results({ player }) {
-  const { name, avatarUrl, level, stats, leetify: L } = player;
+  const { name, avatarUrl, level, stats, leetify: L, faceit, fragged, affinity, steamId } = player;
   const { totalKills, totalDeaths, totalKillsHeadshot, matchesWon, matchesPlayed, hoursPlayed, shotsFired, shotsHit, favoriteWeapon, favoriteWeaponKills } = stats;
 
   const hasLeetify = L && L.aim != null;
@@ -1117,9 +1359,26 @@ export default function Results({ player }) {
             <MatchHistory matches={L.recentMatches} visible={visibleMatches} onLoadMore={() => setVisibleMatches(v => Math.min(v + 15, L.recentMatches.length))} />
           </>, {}, 600)}
 
-          {!hasLeetify && card(
-            <div style={{ textAlign: 'center', color: T.textMuted, fontSize: '0.9rem', padding: '20px 0' }}>
-              Leetify data unavailable — player may not be on Leetify.
+          {/* Leetify attribution — required when Leetify data shown */}
+          {hasLeetify && card(<LeetifyAttribution steamId={steamId} />, { padding: '16px 22px' }, 700)}
+
+          {/* FRAGGED Aim + Faceit fallback layer when no Leetify */}
+          {!hasLeetify && fragged && (
+            <FraggedAimCard aim={fragged.aim} confidence={fragged.confidence} />
+          )}
+
+          {!hasLeetify && faceit && <FaceitCard faceit={faceit} />}
+
+          {/* Weapon Affinity — show when no Leetify (tier 2/3 enrichment) */}
+          {!hasLeetify && affinity && <WeaponAffinity affinity={affinity} />}
+
+          {!hasLeetify && !faceit && card(
+            <div style={{ textAlign: 'center', color: T.textMuted, fontSize: '0.85rem', padding: '14px 0', lineHeight: 1.5 }}>
+              No Leetify or Faceit data for this player.<br />
+              <a href="https://leetify.com/" target="_blank" rel="noopener noreferrer" style={{ color: LEETIFY_PINK, fontWeight: 700, textDecoration: 'underline' }}>
+                Sign up for Leetify
+              </a>
+              {' '}to get aim, utility, and positioning ratings.
             </div>
           )}
         </div>

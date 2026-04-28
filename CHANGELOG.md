@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] — 2026-04-28
+
+Three-tier stats display so every searched player gets meaningful data, even without a Leetify account. Adds Faceit integration, a custom FRAGGED Aim score for non-Leetify users, weapon affinity breakdown, and Leetify legal attribution per their developer guidelines.
+
+### Added
+
+#### Faceit integration
+- New backend fan-out fetches Faceit player data + lifetime CS2 stats in parallel with Steam and Leetify
+- New `<FaceitCard>` shows Level (color-coded by tier), Elo, Region, avg K/D, avg HS%, ADR, win rate, total matches, 1v1 / 1v2 / entry win rates, util damage per round, last-5 W/L pills, and best map (≥10 matches)
+- `View on Faceit →` link to player's Faceit profile
+
+#### FRAGGED Aim score
+- Custom 0–100 aim rating computed when no Leetify data is available
+- **Faceit-backed formula:** weighted blend of Faceit ADR (25%) + Faceit avg K/D (25%) + Faceit avg HS% (20%) + Steam HS% (10%) + Steam accuracy (10%) + Steam K/D (10%)
+- **Steam-only formula:** Steam HS% (40%) + accuracy (30%) + K/D (30%)
+- Card labels the data source ("Faceit + Steam aggregates" or "Steam aggregates only") and explicitly states it is **not** the same metric as Leetify Aim — clear disclaimer in tooltip
+- Color-graded bar (red < 45 < amber < 70 < green)
+
+#### Weapon affinity
+- New `<WeaponAffinity>` shows Rifle / Sniper / Pistol / SMG percentages from Steam lifetime weapon kills
+- Animated bar chart with per-class color coding
+- Shown in tier 2 / tier 3 to fill space the Leetify suite would normally occupy
+
+#### Leetify legal compliance
+- "Data Provided by Leetify" attribution + small Leetify glyph linking to leetify.com
+- "View on Leetify →" link to the player's Leetify profile (in pink `#F84982` per their style guide)
+- Both rendered at the bottom of the Leetify section, only when Leetify data is present
+- All Leetify API calls now send the `_leetify_key` header for higher rate limits
+
+### Changed
+- Backend response shape now includes `steamId`, `faceit`, `fragged`, and `affinity`
+- `safeGet()` now accepts an optional `headers` argument for keyed requests
+- Render logic in `Results.jsx` is now tier-based:
+  - **Tier 1 (Leetify):** full Leetify suite + attribution
+  - **Tier 2 (Faceit, no Leetify):** FRAGGED Aim + Faceit card + Weapon Affinity
+  - **Tier 3 (neither):** FRAGGED Aim (Steam-only) + Weapon Affinity + sign-up CTA
+- Old empty "Leetify data unavailable" state replaced with the new fallback layers
+
+### Notes
+- Per Leetify's developer guidelines, no API responses are cached or persisted; data is fetched live on every request
+- FRAGGED Aim is **not** a substitute for Leetify Aim — Leetify's metric uses demo-parsed inputs (preaim, time-to-damage, spray accuracy) that are not available via Steam or Faceit APIs
+
+---
+
 ## [1.2.0] — 2026-04-27
 
 Full migration to the Cloudflare stack and a new permanent home at **csstat.com**.

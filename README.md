@@ -1,12 +1,12 @@
 # FRAGGED — CS2 Stats Viewer
 
-[![Version](https://img.shields.io/badge/version-1.2.0-a78bfa)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.3.0-a78bfa)](./CHANGELOG.md)
 [![Live](https://img.shields.io/badge/live-www.csstat.com-ec4899)](https://www.csstat.com)
 [![Stack](https://img.shields.io/badge/stack-React%20%7C%20Vite%20%7C%20Cloudflare-22d3ee)](#stack)
 
 **Live → [www.csstat.com](https://www.csstat.com)**
 
-Look up any CS2 player and get a deep breakdown of how they actually play — pulled live from Steam and Leetify. No account needed.
+Look up any CS2 player and get a deep breakdown of how they actually play — pulled live from Steam, Leetify, and Faceit. Three-tier display means **every player gets meaningful data**, even without a Leetify or Faceit account. No login needed.
 
 ---
 
@@ -33,6 +33,12 @@ Look up any CS2 player and get a deep breakdown of how they actually play — pu
 - Load More button paginates 15 at a time
 - Score, result, rating change, TTD, HS%, accuracy, date
 
+### Three-tier coverage *(new in 1.3.0)*
+- **Tier 1 — Leetify available:** full Leetify aim / utility / positioning suite + "Data Provided by Leetify" attribution
+- **Tier 2 — Faceit only:** **FRAGGED Aim** score (custom 0–100, blended from Faceit + Steam aggregates) + Faceit card (Elo, Level, KD, ADR, HS%, win rate, 1v1/1v2 clutch, last 5 W/L, best map)
+- **Tier 3 — neither:** FRAGGED Aim (Steam-only) + Weapon Affinity + sign-up CTA
+- **Weapon Affinity** — Rifle / Sniper / Pistol / SMG breakdown from Steam lifetime weapon kills (shown in tier 2 / 3)
+
 ### Search
 - Steam64 ID
 - Full profile URL (`steamcommunity.com/profiles/...`)
@@ -47,7 +53,7 @@ Look up any CS2 player and get a deep breakdown of how they actually play — pu
 | Frontend | React 18 + Vite, deployed on Cloudflare Pages |
 | Backend | Cloudflare Workers (`fetch` handler, native `fetch` for outbound) |
 | Domain / DNS | Cloudflare Registrar — `csstat.com` |
-| Data | Steam Web API + Leetify public API |
+| Data | Steam Web API + Leetify Public CS API + Faceit Data API |
 | Styling | Inline styles, custom keyframes |
 
 ---
@@ -86,20 +92,24 @@ For local dev, point the frontend at the local Worker by creating `frontend/.env
 VITE_API_URL=http://localhost:8787
 ```
 
-> Steam profiles must be set to **public**. Leetify data only shows for players registered on [leetify.com](https://leetify.com).
+> Steam profiles must be set to **public**. Leetify data only shows when Leetify has parsed at least one demo for the player and the player's privacy mode allows it. Faceit data only shows for players with a Faceit account.
 
 ---
 
 ## Environment variables
 
-**Backend** — production secret stored in Cloudflare:
+**Backend** — production secrets stored in Cloudflare:
 ```bash
 npx wrangler secret put STEAM_API_KEY
+npx wrangler secret put LEETIFY_API_KEY    # https://leetify.com/app/developer
+npx wrangler secret put FACEIT_API_KEY     # https://developers.faceit.com
 ```
 
-For local dev, put it in `backend/.dev.vars` (gitignored):
+For local dev, put them all in `backend/.dev.vars` (gitignored):
 ```
-STEAM_API_KEY="your_key_here"
+STEAM_API_KEY="your_steam_key"
+LEETIFY_API_KEY="your_leetify_key"
+FACEIT_API_KEY="your_faceit_key"
 ```
 
 **Frontend** (Cloudflare Pages dashboard → Settings → Variables, or `.env.local`)

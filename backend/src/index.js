@@ -20,9 +20,9 @@ const json = (data, status = 200) =>
     headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
   });
 
-const safeGet = async (url) => {
+const safeGet = async (url, headers = {}) => {
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { headers });
     if (!res.ok) {
       console.error(`safeGet ${url} → ${res.status}`);
       return null;
@@ -32,6 +32,13 @@ const safeGet = async (url) => {
     console.error(`safeGet failed: ${url}`, e.message);
     return null;
   }
+};
+
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const num = (v) => {
+  if (v == null) return null;
+  const n = parseFloat(v);
+  return Number.isFinite(n) ? n : null;
 };
 
 const buildUrl = (base, params) => {
@@ -57,13 +64,24 @@ async function handlePlayer(steamId, type, env) {
     steamId = vanityData.response.steamid;
   }
 
-  const [summaryData, statsData, levelData, hoursData, leetifyData] = await Promise.all([
+  const leetifyHeaders = env.LEETIFY_API_KEY ? { _leetify_key: env.LEETIFY_API_KEY } : {};
+  const faceitHeaders = env.FACEIT_API_KEY ? { Authorization: `Bearer ${env.FACEIT_API_KEY}` } : {};
+
+  const [summaryData, statsData, levelData, hoursData, leetifyData, faceitPlayerData] = await Promise.all([
     safeGet(buildUrl(`${STEAM_API}/ISteamUser/GetPlayerSummaries/v2/`, { key: KEY, steamids: steamId })),
     safeGet(buildUrl(`${STEAM_API}/ISteamUserStats/GetUserStatsForGame/v2/`, { key: KEY, steamid: steamId, appid: CS2_APP_ID })),
     safeGet(buildUrl(`${STEAM_API}/IPlayerService/GetSteamLevel/v1/`, { key: KEY, steamid: steamId })),
     safeGet(buildUrl(`${STEAM_API}/IPlayerService/GetOwnedGames/v1/`, { key: KEY, steamid: steamId, include_played_free_games: 1, 'appids_filter[0]': CS2_APP_ID })),
-    safeGet(`https://api-public.cs-prod.leetify.com/v3/profile?steam64_id=${steamId}`),
+    safeGet(`https://api-public.cs-prod.leetify.com/v3/profile?steam64_id=${steamId}`, leetifyHeaders),
+    env.FACEIT_API_KEY
+      ? safeGet(`https://open.faceit.com/data/v4/players?game=cs2&game_player_id=${steamId}`, faceitHeaders)
+      : Promise.resolve(null),
   ]);
+
+  const faceitPlayerId = faceitPlayerData?.player_id;
+  const faceitStatsData = faceitPlayerId
+    ? await safeGet(`https://open.faceit.com/data/v4/players/${faceitPlayerId}/stats/cs2`, faceitHeaders)
+    : null;
 
   const profile = summaryData?.response?.players?.[0];
   if (!profile) return json({ error: 'Player not found.' }, 404);
@@ -99,16 +117,99 @@ async function handlePlayer(steamId, type, env) {
   const favoriteWeaponKills = weaponKills[0]?.kills || 0;
   const fallbackHours = Math.round(timePlayed / 3600);
 
+  const sniperKills = stat('total_kills_awp') + stat('total_kills_ssg08');
+  const rifleKills =
+    stat('total_kills_ak47') + stat('total_kills_m4a1') + stat('total_kills_aug') +
+    stat('total_kills_sg556') + stat('total_kills_galilar') + stat('total_kills_famas');
+  const pistolKills =
+    stat('total_kills_glock') + stat('total_kills_hkp2000') + stat('total_kills_usp_silencer') +
+    stat('total_kills_p250') + stat('total_kills_fiveseven') + stat('total_kills_tec9') +
+    stat('total_kills_deagle') + stat('total_kills_cz75a') + stat('total_kills_elite') +
+    stat('total_kills_revolver');
+  const smgKills =
+    stat('total_kills_bizon') + stat('total_kills_mac10') + stat('total_kills_mp5sd') +
+    stat('total_kills_mp7') + stat('total_kills_mp9') + stat('total_kills_p90') + stat('total_kills_ump45');
+  const affinityTotal = sniperKills + rifleKills + pistolKills + smgKills;
+  const affinity = affinityTotal > 0 ? {
+    sniper: Math.round((sniperKills / affinityTotal) * 100),
+    rifle: Math.round((rifleKills / affinityTotal) * 100),
+    pistol: Math.round((pistolKills / affinityTotal) * 100),
+    smg: Math.round((smgKills / affinityTotal) * 100),
+  } : null;
+
   const rating = leetifyData?.rating || null;
   const allMatches = leetifyData?.recent_matches || [];
   const premierMatches = allMatches
     .filter((m) => m.rank_type === 11 || m.rank_type === 12)
     .slice(0, 99);
 
+  let faceit = null;
+  if (faceitPlayerData?.games?.cs2) {
+    const cs2 = faceitPlayerData.games.cs2;
+    const lt = faceitStatsData?.lifetime || {};
+    const segs = (faceitStatsData?.segments || []).filter((s) => s.type === 'Map');
+    const bestMap = segs
+      .filter((s) => num(s.stats?.Matches) >= 10)
+      .sort((a, b) => num(b.stats?.['Win Rate %']) - num(a.stats?.['Win Rate %']))[0] || null;
+    const worstMap = segs
+      .filter((s) => num(s.stats?.Matches) >= 10)
+      .sort((a, b) => num(a.stats?.['Win Rate %']) - num(b.stats?.['Win Rate %']))[0] || null;
+    faceit = {
+      nickname: faceitPlayerData.nickname,
+      country: faceitPlayerData.country,
+      region: cs2.region,
+      level: cs2.skill_level,
+      elo: cs2.faceit_elo,
+      playerId: faceitPlayerData.player_id,
+      kdAvg: num(lt['Average K/D Ratio']),
+      hsAvg: num(lt['Average Headshots %']),
+      adr: num(lt.ADR),
+      winRate: num(lt['Win Rate %']),
+      totalMatches: num(lt['Total Matches']) || num(lt.Matches),
+      currentStreak: num(lt['Current Win Streak']),
+      longestStreak: num(lt['Longest Win Streak']),
+      entrySuccessRate: num(lt['Entry Success Rate']),
+      utilDmgPerRound: num(lt['Utility Damage per Round']),
+      flashSuccessRate: num(lt['Flash Success Rate']),
+      sniperKillRate: num(lt['Sniper Kill Rate']),
+      clutch1v1: num(lt['1v1 Win Rate']),
+      clutch1v2: num(lt['1v2 Win Rate']),
+      recentResults: lt['Recent Results'] || null,
+      bestMap: bestMap ? { name: bestMap.label, winRate: num(bestMap.stats?.['Win Rate %']), matches: num(bestMap.stats?.Matches) } : null,
+      worstMap: worstMap ? { name: worstMap.label, winRate: num(worstMap.stats?.['Win Rate %']), matches: num(worstMap.stats?.Matches) } : null,
+    };
+  }
+
+  const hasLeetifyRating = !!rating;
+  let fragged = null;
+  if (!hasLeetifyRating) {
+    const hsPercent = totalKills > 0 ? (totalKillsHeadshot / totalKills) * 100 : 0;
+    const accuracy = shotsFired > 0 ? (shotsHit / shotsFired) * 100 : 0;
+    const kd = totalDeaths > 0 ? totalKills / totalDeaths : 0;
+
+    const hsScore = clamp(((hsPercent - 25) / 35) * 100, 0, 100);
+    const accScore = clamp(((accuracy - 12) / 13) * 100, 0, 100);
+    const kdScore = clamp(((kd - 0.6) / 0.9) * 100, 0, 100);
+
+    let aim, confidence;
+    if (faceit && faceit.kdAvg != null && faceit.adr != null) {
+      const fHs = clamp(((faceit.hsAvg - 30) / 30) * 100, 0, 100);
+      const fKd = clamp(((faceit.kdAvg - 0.7) / 0.8) * 100, 0, 100);
+      const fAdr = clamp(((faceit.adr - 50) / 50) * 100, 0, 100);
+      aim = Math.round(hsScore * 0.10 + accScore * 0.10 + kdScore * 0.10 + fHs * 0.20 + fKd * 0.25 + fAdr * 0.25);
+      confidence = 'faceit';
+    } else {
+      aim = Math.round(hsScore * 0.40 + accScore * 0.30 + kdScore * 0.30);
+      confidence = 'steam';
+    }
+    fragged = { aim, confidence };
+  }
+
   return json({
     name: profile.personaname,
     avatarUrl: profile.avatarmedium,
     level: steamLevel,
+    steamId,
     stats: {
       totalKills,
       totalDeaths,
@@ -121,6 +222,9 @@ async function handlePlayer(steamId, type, env) {
       favoriteWeapon,
       favoriteWeaponKills,
     },
+    affinity,
+    faceit,
+    fragged,
     leetify: rating
       ? {
           aim: rating.aim ?? null,
