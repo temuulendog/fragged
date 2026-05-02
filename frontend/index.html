@@ -2,9 +2,48 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cs2-roaster</title>
+
+    <title>FRAGGED — CS2 Stats Tracker | csstat.com</title>
+    <meta name="description" content="Track your Counter-Strike 2 stats, Premier rank, match history, and aim performance. Pulls live data from Steam, Leetify, and Faceit. Just paste your Steam ID." />
+    <meta name="keywords" content="CS2 stats, Counter-Strike 2 tracker, CS2 rank tracker, Premier rank, Leetify, Faceit stats, csstat" />
+    <meta name="author" content="FRAGGED" />
+    <meta name="theme-color" content="#0d1f17" />
+    <link rel="canonical" href="https://www.csstat.com/" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="FRAGGED" />
+    <meta property="og:title" content="FRAGGED — CS2 Stats Tracker" />
+    <meta property="og:description" content="Track your Counter-Strike 2 stats, Premier rank, match history, and aim performance. Live data from Steam, Leetify, and Faceit." />
+    <meta property="og:url" content="https://www.csstat.com/" />
+    <meta property="og:image" content="https://www.csstat.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="FRAGGED — CS2 Stats Tracker" />
+    <meta name="twitter:description" content="Track your Counter-Strike 2 stats, Premier rank, match history, and aim performance. Live data from Steam, Leetify, and Faceit." />
+    <meta name="twitter:image" content="https://www.csstat.com/og-image.png" />
+
+    <!-- Structured data: WebSite + SearchAction so Google shows a rich card -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "FRAGGED",
+      "alternateName": "csstat",
+      "url": "https://www.csstat.com/",
+      "description": "Track your Counter-Strike 2 stats, Premier rank, match history, and aim performance. Live data from Steam, Leetify, and Faceit."
+    }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   </head>
   <body>
     <div id="root"></div>

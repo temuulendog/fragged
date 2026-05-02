@@ -46,7 +46,7 @@ export default function App() {
       {state === 'hero' && <Hero onSubmit={handleSubmit} error={error} />}
       {state === 'results' && player && (
         <>
-          <Results player={player} />
+          <Results player={player} onSearch={handleSubmit} onReset={handleReset} />
           <Roast roastText={roastText} onReset={handleReset} />
         </>
       )}

@@ -591,7 +591,7 @@ function MatchHistory({ matches, visible, onLoadMore }) {
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
         <thead>
           <tr style={{ borderBottom: `1px solid ${T.border}` }}>
-            {['MAP', 'MODE', 'SCORE', 'RES', 'RATING ±', 'TTD', 'HS%', 'ACC', 'DATE'].map(h => (
+            {['MAP', 'MODE', 'SCORE', 'RES', 'RANK ±', 'TTD', 'HS%', 'ACC', 'DATE'].map(h => (
               <th key={h} style={{ padding: '10px 12px', color: T.textMuted, fontWeight: 600, textAlign: h === 'MAP' ? 'left' : 'center', letterSpacing: '0.12em', fontSize: '0.62rem', fontFamily: 'Barlow Condensed, sans-serif' }}>{h}</th>
             ))}
           </tr>
@@ -632,9 +632,30 @@ function MatchHistory({ matches, visible, onLoadMore }) {
                   }}>{r.label}</span>
                 </td>
                 <td style={{ padding: '10px 12px', textAlign: 'center' }}>
-                  {rc != null
-                    ? <span style={{ color: rc >= 0 ? T.good : T.bad, fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>{rc >= 0 ? '+' : ''}{rc}</span>
-                    : <span style={{ color: T.textDim }}>—</span>}
+                  {m.rank_type === 11 && m.rank > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', lineHeight: 1.05 }}>
+                      <span style={{
+                        color: getRankTier(m.rank).color,
+                        fontFamily: 'Barlow Condensed, sans-serif',
+                        fontWeight: 800,
+                        fontSize: '0.95rem',
+                        letterSpacing: '0.02em',
+                        textShadow: `0 0 10px ${getRankTier(m.rank).color}55`,
+                      }}>{m.rank.toLocaleString()}</span>
+                      {rc != null ? (
+                        <span style={{
+                          color: rc >= 0 ? T.good : T.bad,
+                          fontFamily: 'Barlow Condensed, sans-serif',
+                          fontWeight: 700,
+                          fontSize: '0.7rem',
+                        }}>{rc >= 0 ? '+' : ''}{rc}</span>
+                      ) : (
+                        <span style={{ color: T.textDim, fontSize: '0.7rem' }}>—</span>
+                      )}
+                    </div>
+                  ) : (
+                    <span style={{ color: T.textDim }}>—</span>
+                  )}
                 </td>
                 <td style={{ padding: '10px 12px', textAlign: 'center', color: ttdColor(ttd), fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 600 }}>
                   {ttd != null ? `${Math.round(ttd)}ms` : '—'}
@@ -682,6 +703,185 @@ function MatchHistory({ matches, visible, onLoadMore }) {
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+// CS2 Premier season boundaries (approximate, based on Valve's seasonal cadence).
+// Most recent first so we iterate in display order (Season 4 → Season 1).
+const PREMIER_SEASONS = [
+  { num: 4, label: 'Season Four',  start: '2025-04-23', end: null },
+  { num: 3, label: 'Season Three', start: '2024-10-01', end: '2025-04-23' },
+  { num: 2, label: 'Season Two',   start: '2024-04-24', end: '2024-10-01' },
+  { num: 1, label: 'Season One',   start: '2023-10-05', end: '2024-04-24' },
+];
+
+function RankBadge({ rank, size = 'md' }) {
+  if (rank == null || rank <= 0) return <span style={{ color: T.textDim }}>—</span>;
+  const tier = getRankTier(rank);
+  const dims = size === 'sm'
+    ? { padX: 10, padY: 4, font: '0.78rem' }
+    : { padX: 14, padY: 6, font: '0.95rem' };
+  return (
+    <span style={{
+      display: 'inline-block',
+      padding: `${dims.padY}px ${dims.padX}px`,
+      background: `linear-gradient(135deg, ${tier.color}33 0%, ${tier.color}14 100%)`,
+      border: `1px solid ${tier.color}66`,
+      borderRadius: '4px',
+      transform: 'skewX(-12deg)',
+      boxShadow: `0 0 12px ${tier.color}33`,
+    }}>
+      <span style={{
+        display: 'inline-block',
+        transform: 'skewX(12deg)',
+        color: tier.color,
+        fontFamily: 'Barlow Condensed, sans-serif',
+        fontWeight: 800,
+        fontStyle: 'italic',
+        fontSize: dims.font,
+        letterSpacing: '0.02em',
+        textShadow: `0 0 12px ${tier.color}66`,
+      }}>{rank.toLocaleString()}</span>
+    </span>
+  );
+}
+
+function PremierSeasons({ matches }) {
+  const [expanded, setExpanded] = useState(null);
+
+  const seasons = useMemo(() => {
+    if (!matches?.length) return [];
+    const premier = matches.filter(m => m.rank_type === 11 && m.rank > 0 && m.finished_at);
+
+    return PREMIER_SEASONS.map(s => {
+      const startMs = new Date(s.start).getTime();
+      const endMs = s.end ? new Date(s.end).getTime() : Infinity;
+      const inSeason = premier.filter(m => {
+        const t = new Date(m.finished_at).getTime();
+        return t >= startMs && t < endMs;
+      });
+      if (!inSeason.length) return null;
+
+      const wins = inSeason.filter(m => m.outcome === 'win').length;
+      const losses = inSeason.filter(m => m.outcome === 'loss').length;
+      const decided = wins + losses;
+      const winRate = decided > 0 ? Math.round((wins / decided) * 100) : 0;
+
+      const ranks = inSeason.map(m => m.rank);
+      const minRank = Math.min(...ranks);
+      const maxRank = Math.max(...ranks);
+
+      const mapCount = {};
+      for (const m of inSeason) {
+        const map = (m.map_name || m.map || '').replace('de_', '');
+        if (!map) continue;
+        mapCount[map] = (mapCount[map] || 0) + 1;
+      }
+      const mostPlayed = Object.entries(mapCount).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
+
+      return { ...s, count: inSeason.length, winRate, minRank, maxRank, mostPlayed, matches: inSeason };
+    }).filter(Boolean);
+  }, [matches]);
+
+  if (!seasons.length) return null;
+
+  const fmtDate = (iso) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return `${d.getMonth() + 1}/${d.getDate()}`;
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <div style={{ fontSize: '0.6rem', color: T.textMuted, letterSpacing: '0.16em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 600, marginBottom: '8px' }}>
+        Displayed in (Min &gt;&gt;&gt; Max) — based on recent matches
+      </div>
+      {seasons.map((s, idx) => {
+        const isOpen = expanded === s.num;
+        return (
+          <div
+            key={s.num}
+            style={{
+              borderBottom: `1px solid ${T.border}`,
+              animation: `fr-fadeUp 500ms ease-out ${idx * 60}ms both`,
+            }}
+          >
+            <button
+              onClick={() => setExpanded(isOpen ? null : s.num)}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: '14px',
+                background: 'transparent', border: 'none', cursor: 'pointer',
+                padding: '14px 4px', textAlign: 'left',
+                transition: 'background-color 180ms',
+                borderRadius: '6px',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(167,139,250,0.05)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', flexWrap: 'wrap' }}>
+                  <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, fontSize: '1rem', color: T.text, letterSpacing: '0.04em' }}>
+                    {s.label}
+                  </span>
+                  <span style={{ fontSize: '0.78rem', color: T.text2 }}>
+                    {s.count} {s.count === 1 ? 'match' : 'matches'}, {s.winRate}% wr, most played: {s.mostPlayed}
+                  </span>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                <RankBadge rank={s.minRank} />
+                <span style={{ color: T.textDim, fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, letterSpacing: '0.1em' }}>&gt;&gt;&gt;</span>
+                <RankBadge rank={s.maxRank} />
+                <span style={{
+                  color: T.textMuted,
+                  fontSize: '0.7rem',
+                  marginLeft: '4px',
+                  transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 200ms',
+                  display: 'inline-block',
+                }}>▼</span>
+              </div>
+            </button>
+            {isOpen && (
+              <div style={{ padding: '4px 4px 14px', display: 'flex', flexDirection: 'column', gap: '4px', animation: 'fr-fadeIn 240ms ease-out both' }}>
+                {s.matches.slice(0, 12).map((m, i) => (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                    padding: '6px 8px', borderRadius: '4px',
+                    background: 'rgba(167,139,250,0.03)',
+                    fontSize: '0.74rem', color: T.text2,
+                  }}>
+                    <span style={{ minWidth: '60px', color: T.text, fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 600 }}>
+                      {(m.map_name || m.map || '—').replace('de_', '').replace(/^\w/, c => c.toUpperCase())}
+                    </span>
+                    <span style={{ minWidth: '50px', textAlign: 'center' }}>
+                      {Array.isArray(m.score) ? `${m.score[0]} : ${m.score[1]}` : '—'}
+                    </span>
+                    <span style={{
+                      minWidth: '20px', textAlign: 'center', fontWeight: 800,
+                      color: m.outcome === 'win' ? T.good : m.outcome === 'loss' ? T.bad : T.text2,
+                      fontFamily: 'Barlow Condensed, sans-serif',
+                    }}>
+                      {m.outcome === 'win' ? 'W' : m.outcome === 'loss' ? 'L' : 'D'}
+                    </span>
+                    <span style={{ flex: 1 }} />
+                    <RankBadge rank={m.rank} size="sm" />
+                    <span style={{ minWidth: '40px', textAlign: 'right', color: T.textDim, fontSize: '0.7rem' }}>
+                      {fmtDate(m.finished_at)}
+                    </span>
+                  </div>
+                ))}
+                {s.matches.length > 12 && (
+                  <div style={{ textAlign: 'center', color: T.textDim, fontSize: '0.7rem', padding: '6px 0' }}>
+                    + {s.matches.length - 12} more matches in this season
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -997,7 +1197,99 @@ function StatCard({ label, value, accent }) {
   );
 }
 
-export default function Results({ player }) {
+function parseSearchInput(raw) {
+  const s = raw.trim();
+  const profileMatch = s.match(/steamcommunity\.com\/profiles\/(\d{17})/);
+  if (profileMatch) return { id: profileMatch[1], type: 'id' };
+  const vanityMatch = s.match(/steamcommunity\.com\/id\/([^/\s?]+)/);
+  if (vanityMatch) return { id: vanityMatch[1], type: 'vanity' };
+  if (/^\d{17}$/.test(s)) return { id: s, type: 'id' };
+  if (s.length > 0) return { id: s, type: 'vanity' };
+  return null;
+}
+
+function StickySearch({ onSearch, onReset, tierColor }) {
+  const [query, setQuery] = useState('');
+  const [focused, setFocused] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const parsed = parseSearchInput(query);
+    if (!parsed) return;
+    onSearch(parsed.id, parsed.type);
+    setQuery('');
+  };
+
+  return (
+    <div style={{
+      position: 'sticky', top: 0, zIndex: 50,
+      background: 'rgba(6, 6, 12, 0.78)',
+      backdropFilter: 'blur(14px)',
+      WebkitBackdropFilter: 'blur(14px)',
+      borderBottom: `1px solid ${T.border}`,
+    }}>
+      <div style={{
+        maxWidth: '1100px', margin: '0 auto',
+        padding: '10px 28px',
+        display: 'flex', alignItems: 'center', gap: '14px',
+      }}>
+        <button
+          onClick={onReset}
+          style={{
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            padding: '4px 8px',
+            fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 800,
+            fontSize: '1.2rem', letterSpacing: '0.14em',
+            color: T.text,
+            textShadow: `0 0 18px ${tierColor}55`,
+            flexShrink: 0,
+          }}
+          aria-label="Back to home"
+        >FRAGGED</button>
+        <form onSubmit={handleSubmit} style={{ flex: 1, display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <input
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            placeholder="Search another Steam ID, profile link, or custom URL..."
+            style={{
+              flex: 1, minWidth: 0,
+              background: 'rgba(12, 12, 24, 0.7)',
+              border: `1px solid ${focused ? T.borderStrong : T.border}`,
+              borderRadius: '8px',
+              color: T.text,
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '0.86rem',
+              padding: '8px 14px',
+              outline: 'none',
+              transition: 'border-color 200ms, box-shadow 200ms',
+              boxShadow: focused ? `0 0 0 2px ${T.accent}22` : 'none',
+            }}
+          />
+          <button
+            type="submit"
+            disabled={!query.trim()}
+            style={{
+              background: query.trim() ? `linear-gradient(135deg, ${T.accent} 0%, ${T.accent2} 100%)` : 'rgba(120,120,180,0.10)',
+              color: query.trim() ? '#0a0a14' : T.textMuted,
+              border: 'none', borderRadius: '8px',
+              padding: '8px 18px',
+              fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700,
+              fontSize: '0.82rem', letterSpacing: '0.14em', textTransform: 'uppercase',
+              cursor: query.trim() ? 'pointer' : 'not-allowed',
+              transition: 'transform 150ms, box-shadow 150ms',
+              flexShrink: 0,
+            }}
+          >Search</button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default function Results({ player, onSearch, onReset }) {
   const { name, avatarUrl, level, stats, leetify: L, faceit, fragged, affinity, steamId } = player;
   const { totalKills, totalDeaths, totalKillsHeadshot, matchesWon, matchesPlayed, hoursPlayed, shotsFired, shotsHit, favoriteWeapon, favoriteWeaponKills } = stats;
 
@@ -1088,6 +1380,8 @@ export default function Results({ player }) {
           pointerEvents: 'none',
           animation: 'fr-gridShift 60s linear infinite',
         }} />
+
+        {onSearch && <StickySearch onSearch={onSearch} onReset={onReset} tierColor={tier.color} />}
 
         {/* Header banner */}
         <div
@@ -1360,6 +1654,12 @@ export default function Results({ player }) {
               </div>
             </div>
           </>, {}, 520)}
+
+          {/* Premier by Season */}
+          {hasLeetify && L.recentMatches?.length > 0 && card(<>
+            {sectionTitle('Premier by Season')}
+            <PremierSeasons matches={L.recentMatches} />
+          </>, {}, 580)}
 
           {/* Match History */}
           {hasLeetify && L.recentMatches?.length > 0 && card(<>
