@@ -86,7 +86,13 @@ async function handlePlayer(steamId, type, env) {
   const profile = summaryData?.response?.players?.[0];
   if (!profile) return json({ error: 'Player not found.' }, 404);
 
-  if (!statsData?.playerstats?.stats) {
+  const statsAvailable = !!statsData?.playerstats?.stats;
+
+  // If profile itself is private (communityvisibilitystate !== 3) AND we got nothing useful
+  // from Leetify or Faceit either, fail with the classic "set profile public" error.
+  // Otherwise, render whatever data we can (Leetify + Faceit can carry the experience).
+  const profileIsPrivate = profile.communityvisibilitystate !== 3;
+  if (profileIsPrivate && !leetifyData && !faceitPlayerData) {
     return json({ error: 'Profile is private. Coward.' }, 403);
   }
 
@@ -94,7 +100,7 @@ async function handlePlayer(steamId, type, env) {
   const playtimeMinutes = hoursData?.response?.games?.[0]?.playtime_forever || 0;
   const hoursPlayed = Math.round(playtimeMinutes / 60);
 
-  const rawStats = statsData.playerstats.stats;
+  const rawStats = statsAvailable ? statsData.playerstats.stats : [];
   const stat = (name) => rawStats.find((s) => s.name === name)?.value || 0;
 
   const totalKills = stat('total_kills');
@@ -182,7 +188,9 @@ async function handlePlayer(steamId, type, env) {
 
   const hasLeetifyRating = !!rating;
   let fragged = null;
-  if (!hasLeetifyRating) {
+  // Don't compute FRAGGED Aim when Steam stats are unavailable — every Steam-derived input would be 0
+  // and the score would be misleadingly low.
+  if (!hasLeetifyRating && statsAvailable) {
     const hsPercent = totalKills > 0 ? (totalKillsHeadshot / totalKills) * 100 : 0;
     const accuracy = shotsFired > 0 ? (shotsHit / shotsFired) * 100 : 0;
     const kd = totalDeaths > 0 ? totalKills / totalDeaths : 0;
@@ -210,6 +218,7 @@ async function handlePlayer(steamId, type, env) {
     avatarUrl: profile.avatarmedium,
     level: steamLevel,
     steamId,
+    statsAvailable,
     stats: {
       totalKills,
       totalDeaths,

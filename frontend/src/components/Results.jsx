@@ -599,8 +599,18 @@ function MatchHistory({ matches, visible, onLoadMore }) {
         <tbody>
           {shown.map((m, i) => {
             const r = result(m);
-            const rc = (i < matches.length - 1 && m.rank_type === 11 && matches[i].rank > 0 && matches[i + 1].rank > 0)
-              ? matches[i].rank - matches[i + 1].rank : null;
+            // Delta = this match's rank minus the previous PREMIER match (rank>0) further down the array.
+            // matches[i+1] alone is unsafe because Comp matches reuse the `rank` field for per-map ranks (1-15).
+            let rc = null;
+            if (m.rank_type === 11 && m.rank > 0) {
+              for (let j = i + 1; j < matches.length; j++) {
+                const prev = matches[j];
+                if (prev.rank_type === 11 && prev.rank > 0) {
+                  rc = m.rank - prev.rank;
+                  break;
+                }
+              }
+            }
             const ttd = m.reaction_time_ms;
 
             return (
@@ -751,8 +761,7 @@ function PremierSeasons({ matches }) {
   const [expanded, setExpanded] = useState(null);
 
   const seasons = useMemo(() => {
-    if (!matches?.length) return [];
-    const premier = matches.filter(m => m.rank_type === 11 && m.rank > 0 && m.finished_at);
+    const premier = (matches || []).filter(m => m.rank_type === 11 && m.rank > 0 && m.finished_at);
 
     return PREMIER_SEASONS.map(s => {
       const startMs = new Date(s.start).getTime();
@@ -761,7 +770,10 @@ function PremierSeasons({ matches }) {
         const t = new Date(m.finished_at).getTime();
         return t >= startMs && t < endMs;
       });
-      if (!inSeason.length) return null;
+
+      if (!inSeason.length) {
+        return { ...s, count: 0, winRate: null, minRank: null, maxRank: null, mostPlayed: null, matches: [], hasData: false };
+      }
 
       const wins = inSeason.filter(m => m.outcome === 'win').length;
       const losses = inSeason.filter(m => m.outcome === 'loss').length;
@@ -780,8 +792,8 @@ function PremierSeasons({ matches }) {
       }
       const mostPlayed = Object.entries(mapCount).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
 
-      return { ...s, count: inSeason.length, winRate, minRank, maxRank, mostPlayed, matches: inSeason };
-    }).filter(Boolean);
+      return { ...s, count: inSeason.length, winRate, minRank, maxRank, mostPlayed, matches: inSeason, hasData: true };
+    });
   }, [matches]);
 
   if (!seasons.length) return null;
@@ -795,28 +807,32 @@ function PremierSeasons({ matches }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
       <div style={{ fontSize: '0.6rem', color: T.textMuted, letterSpacing: '0.16em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 600, marginBottom: '8px' }}>
-        Displayed in (Min &gt;&gt;&gt; Max) — based on recent matches
+        Displayed in (Min &gt;&gt;&gt; Max) — Leetify only exposes the last ~100 matches, so older seasons may show no data
       </div>
       {seasons.map((s, idx) => {
-        const isOpen = expanded === s.num;
+        const isOpen = s.hasData && expanded === s.num;
+        const interactive = s.hasData;
         return (
           <div
             key={s.num}
             style={{
               borderBottom: `1px solid ${T.border}`,
               animation: `fr-fadeUp 500ms ease-out ${idx * 60}ms both`,
+              opacity: interactive ? 1 : 0.5,
             }}
           >
             <button
-              onClick={() => setExpanded(isOpen ? null : s.num)}
+              onClick={() => interactive && setExpanded(isOpen ? null : s.num)}
+              disabled={!interactive}
               style={{
                 width: '100%', display: 'flex', alignItems: 'center', gap: '14px',
-                background: 'transparent', border: 'none', cursor: 'pointer',
+                background: 'transparent', border: 'none',
+                cursor: interactive ? 'pointer' : 'default',
                 padding: '14px 4px', textAlign: 'left',
                 transition: 'background-color 180ms',
                 borderRadius: '6px',
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(167,139,250,0.05)'; }}
+              onMouseEnter={e => { if (interactive) e.currentTarget.style.background = 'rgba(167,139,250,0.05)'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -825,7 +841,9 @@ function PremierSeasons({ matches }) {
                     {s.label}
                   </span>
                   <span style={{ fontSize: '0.78rem', color: T.text2 }}>
-                    {s.count} {s.count === 1 ? 'match' : 'matches'}, {s.winRate}% wr, most played: {s.mostPlayed}
+                    {s.hasData
+                      ? `${s.count} ${s.count === 1 ? 'match' : 'matches'}, ${s.winRate}% wr, most played: ${s.mostPlayed}`
+                      : 'No matches in recent history'}
                   </span>
                 </div>
               </div>
@@ -833,14 +851,18 @@ function PremierSeasons({ matches }) {
                 <RankBadge rank={s.minRank} />
                 <span style={{ color: T.textDim, fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, letterSpacing: '0.1em' }}>&gt;&gt;&gt;</span>
                 <RankBadge rank={s.maxRank} />
-                <span style={{
-                  color: T.textMuted,
-                  fontSize: '0.7rem',
-                  marginLeft: '4px',
-                  transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                  transition: 'transform 200ms',
-                  display: 'inline-block',
-                }}>▼</span>
+                {interactive ? (
+                  <span style={{
+                    color: T.textMuted,
+                    fontSize: '0.7rem',
+                    marginLeft: '4px',
+                    transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 200ms',
+                    display: 'inline-block',
+                  }}>▼</span>
+                ) : (
+                  <span style={{ width: '14px', display: 'inline-block' }} />
+                )}
               </div>
             </button>
             {isOpen && (
@@ -1290,7 +1312,7 @@ function StickySearch({ onSearch, onReset, tierColor }) {
 }
 
 export default function Results({ player, onSearch, onReset }) {
-  const { name, avatarUrl, level, stats, leetify: L, faceit, fragged, affinity, steamId } = player;
+  const { name, avatarUrl, level, stats, leetify: L, faceit, fragged, affinity, steamId, statsAvailable = true } = player;
   const { totalKills, totalDeaths, totalKillsHeadshot, matchesWon, matchesPlayed, hoursPlayed, shotsFired, shotsHit, favoriteWeapon, favoriteWeaponKills } = stats;
 
   const hasLeetify = L && L.aim != null;
@@ -1437,11 +1459,18 @@ export default function Results({ player, onSearch, onReset }) {
                 display: 'flex', gap: '18px', marginTop: '10px', flexWrap: 'wrap',
                 animation: 'fr-fadeUp 800ms cubic-bezier(0.16,1,0.3,1) 200ms both',
               }}>
-                {[
-                  { v: `${hoursPlayed.toLocaleString()}h`, label: 'playtime' },
-                  { v: matchesPlayed.toLocaleString(), label: 'matches' },
-                  { v: `${winRate}%`, label: 'win rate' },
-                ].map(({ v, label }) => (
+                {(statsAvailable
+                  ? [
+                      { v: `${hoursPlayed.toLocaleString()}h`, label: 'playtime' },
+                      { v: matchesPlayed.toLocaleString(), label: 'matches' },
+                      { v: `${winRate}%`, label: 'win rate' },
+                    ]
+                  : [
+                      faceit ? { v: faceit.totalMatches?.toLocaleString() ?? '—', label: 'faceit matches' } : null,
+                      faceit ? { v: faceit.winRate != null ? `${Math.round(faceit.winRate)}%` : '—', label: 'faceit win rate' } : null,
+                      premier != null ? { v: premier.toLocaleString(), label: 'premier' } : null,
+                    ].filter(Boolean)
+                ).map(({ v, label }) => (
                   <div key={label} style={{ display: 'flex', flexDirection: 'column' }}>
                     <span style={{ fontSize: '1rem', color: T.text, fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>{v}</span>
                     <span style={{ fontSize: '0.6rem', color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.14em' }}>{label}</span>
@@ -1455,15 +1484,37 @@ export default function Results({ player, onSearch, onReset }) {
 
         <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '28px 28px 100px', display: 'flex', flexDirection: 'column', gap: '18px', position: 'relative' }}>
 
-          {/* Stat Cards */}
-          <div className="fr-section" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', animationDelay: '120ms' }}>
-            <StatCard label="K/D Ratio"    value={kd}                             accent={T.accent} />
-            <StatCard label="Headshot %"   value={`${hsPercent}%`}                accent="#ec4899" />
-            <StatCard label="Accuracy"     value={`${accuracy}%`}                 accent={T.accent2} />
-            <StatCard label="Fav Weapon"   value={favoriteWeapon}                 accent={tier.color} />
-            <StatCard label="Weapon Kills" value={favoriteWeaponKills.toLocaleString()} accent={T.warn} />
-            <StatCard label="Total Kills"  value={totalKills.toLocaleString()}    accent={T.good} />
-          </div>
+          {/* Stat Cards (Steam-derived) */}
+          {statsAvailable ? (
+            <div className="fr-section" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', animationDelay: '120ms' }}>
+              <StatCard label="K/D Ratio"    value={kd}                             accent={T.accent} />
+              <StatCard label="Headshot %"   value={`${hsPercent}%`}                accent="#ec4899" />
+              <StatCard label="Accuracy"     value={`${accuracy}%`}                 accent={T.accent2} />
+              <StatCard label="Fav Weapon"   value={favoriteWeapon}                 accent={tier.color} />
+              <StatCard label="Weapon Kills" value={favoriteWeaponKills.toLocaleString()} accent={T.warn} />
+              <StatCard label="Total Kills"  value={totalKills.toLocaleString()}    accent={T.good} />
+            </div>
+          ) : (
+            <div
+              className="fr-section"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '12px',
+                padding: '12px 18px',
+                background: 'linear-gradient(90deg, rgba(251,191,36,0.06) 0%, transparent 100%)',
+                border: `1px solid rgba(251,191,36,0.20)`,
+                borderRadius: '10px',
+                animationDelay: '120ms',
+                fontSize: '0.82rem', color: T.text2,
+              }}
+            >
+              <span style={{ color: T.warn, fontSize: '1rem' }}>⚠</span>
+              <span>
+                <strong style={{ color: T.text }}>Steam game stats are not public</strong> for this player — their CS2
+                Game Details privacy is set to friends-only or private. Showing
+                {hasLeetify && faceit ? ' Leetify + Faceit' : hasLeetify ? ' Leetify' : faceit ? ' Faceit' : ''} data only.
+              </span>
+            </div>
+          )}
 
           {/* Leetify attribution banner — appears immediately above Leetify-sourced data */}
           {hasLeetify && (

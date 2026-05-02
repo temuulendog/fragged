@@ -7,6 +7,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.0] — 2026-05-03
+
+UX overhaul and resilience pass: the home page and verdict section are rebuilt to match the dark navy / purple-cyan language used throughout Results, every results page now has a sticky search bar and a per-season Premier rank breakdown, match history shows the rank itself alongside the delta, and the backend no longer rejects players whose Steam game-detail privacy is set to friends-only.
+
+### Added
+
+#### SEO & social previews
+- Real `<title>`, `meta description`, `keywords`, `theme-color`, and canonical link in `index.html`
+- Open Graph + Twitter Card tags so Google, Discord, X, etc. show a rich preview
+- 1200×630 `og-image.png` (FRAGGED wordmark + tagline + `csstat.com`) shipped in `frontend/public/`
+- `WebSite` JSON-LD structured data block
+
+#### Sticky in-results search bar
+- New `<StickySearch>` component pinned to the top of the viewport on the Results page
+- Compact form: clickable FRAGGED wordmark resets to home, input + submit on the right
+- Reuses the same Steam ID / profile URL / vanity URL parser from Hero
+- No more scrolling back to the landing page to look up another player
+
+#### Premier by Season card
+- New `<PremierSeasons>` component above the Recent Matches card
+- Buckets recent Premier matches into Season 1–4 by hardcoded CS2 season date ranges
+- Per-season rollup: match count, win rate, most-played map, min → max rank as colored slanted "rank badges" matching the Leetify visual language
+- Click a season to expand a per-match list (up to 12, with a "+ N more" footer)
+- Always renders all four seasons; seasons with no matches in the recent window appear muted with an explanatory caveat (Leetify's public API only exposes the most recent ~100 matches)
+
+#### Rank badges in match history
+- The `RATING ±` column is now `RANK ±` and shows two stacked values: the absolute Premier rank for that match, color-coded by tier, with the rating delta below it
+
+### Changed
+
+#### Home page (Hero)
+- Full visual redesign — green theme replaced with the dark navy / purple+cyan look used by Results
+- FRAGGED wordmark now uses a white→lavender→purple gradient with neon drop-shadow
+- Two orbiting rings with glowing accent dots, drifting purple/cyan blur orbs, and an animated grid backdrop
+- "CS2 Stats Tracker · Steam · Leetify · Faceit" pill with shimmer above the wordmark
+- Glassmorphism input with magnifier glyph and purple focus glow
+- CTA recolored from orange to a purple→cyan gradient with hover lift
+- Feature pills row (Premier Rank · Aim & Utility · Match History · Faceit + Leetify) and `csstat.com` credit at the bottom
+
+#### Verdict / Roast section
+- Background, divider, card, and buttons all rebuilt to match the dark navy theme — no more green panel
+- Verdict card is now a glass card with backdrop blur and a top accent line
+- Quote mark switches from amber to purple-tinted; cursor blink uses purple with a glow
+- Section title styled like Results section titles (gradient bar + uppercase Barlow Condensed)
+- "Share my shame" → purple→cyan gradient; "Try another player" → outlined button matching Results
+- Auto-typing roast preserved; only the chrome changed
+
+### Fixed
+
+#### Match history rank delta
+- Comp-mode entries reuse the same `rank` field for per-map ranks (1–15), so the previous delta logic could subtract a tiny number like `11` from the player's actual Premier rating and produce nonsense like `+25,315`
+- `MatchHistory` now scans backwards through the array for the previous Premier match with `rank > 0` and computes the delta against that, ignoring any interleaved Comp matches
+
+#### Graceful degrade for "game-details private"
+- Some players have a fully public profile but their CS2 *Game Details* privacy set to friends-only — the Steam `GetUserStatsForGame` endpoint returns HTTP 400 for them
+- Backend used to surface this as `Profile is private. Coward.` (403) and abort the entire response, even when Leetify and Faceit had data
+- Backend now exposes `statsAvailable: boolean` in the response and only 403s when the Steam profile *and* both Leetify and Faceit are unreachable
+- Frontend gracefully swaps the Steam stat-card row for a yellow notice banner and substitutes the playtime/matches/win-rate header with Faceit + Premier counterparts when Steam-derived numbers aren't available
+- `FRAGGED Aim` is suppressed when Steam stats are missing (its inputs would all be zero)
+
+### Notes
+- `recent_matches` from Leetify is still capped at the latest ~100 matches by their public API, so the Premier by Season card cannot show data for older seasons that fall outside that window — the card now states this explicitly instead of just hiding the affected seasons
+
+---
+
 ## [1.3.0] — 2026-04-28
 
 Three-tier stats display so every searched player gets meaningful data, even without a Leetify account. Adds Faceit integration, a custom FRAGGED Aim score for non-Leetify users, weapon affinity breakdown, and Leetify legal attribution per their developer guidelines.
@@ -138,6 +203,8 @@ Initial public release.
 
 ---
 
+[1.4.0]: https://github.com/temuulendog/fragged/releases/tag/v1.4.0
+[1.3.0]: https://github.com/temuulendog/fragged/releases/tag/v1.3.0
 [1.2.0]: https://github.com/temuulendog/fragged/releases/tag/v1.2.0
 [1.1.0]: https://github.com/temuulendog/fragged/releases/tag/v1.1.0
 [1.0.0]: https://github.com/temuulendog/fragged/releases/tag/v1.0.0
