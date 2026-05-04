@@ -1534,16 +1534,13 @@ export default function Results({ player, onSearch, onReset }) {
                 href="https://leetify.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  color: T.text2, textDecoration: 'none',
-                  fontSize: '0.72rem', letterSpacing: '0.06em', fontWeight: 600,
-                }}
+                style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill={LEETIFY_PINK} style={{ flexShrink: 0 }}>
-                  <path d="M3 3h4v14h10v4H3V3z" />
-                </svg>
-                <span>Data Provided by <span style={{ color: LEETIFY_PINK, fontWeight: 800 }}>Leetify</span></span>
+                <img
+                  src="/leetify-badge.png"
+                  alt="Data provided by Leetify"
+                  style={{ height: '36px', width: 'auto', display: 'block' }}
+                />
               </a>
               <a
                 href={`https://leetify.com/app/profile/${steamId}`}
