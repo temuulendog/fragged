@@ -1559,11 +1559,11 @@ export default function Results({ player, onSearch, onReset }) {
           {/* Performance Bars */}
           {hasLeetify && card(<>
             {sectionTitle('Performance Overview', `${tier.label} benchmarks`)}
-            <RatingBar label="AIM"           value={L.aim}         benchmark={tier.aim}         minVal={0}  maxVal={100} decimals={1} color={T.accent}  delay={0} />
-            <RatingBar label="UTILITY"       value={L.utility}     benchmark={tier.utility}     minVal={0}  maxVal={100} decimals={1} color={T.ct}      delay={100} />
-            <RatingBar label="POSITIONING"   value={L.positioning} benchmark={tier.positioning} minVal={0}  maxVal={100} decimals={1} color={T.accent2} delay={200} />
-            <RatingBar label="OPENING DUELS" value={openingDisplay} benchmark={tier.opening}    minVal={-8} maxVal={8}   decimals={2} color={T.good}    delay={300} />
-            <RatingBar label="CLUTCHING"     value={clutchDisplay}  benchmark={tier.clutch}     minVal={0}  maxVal={25}  decimals={2} color="#ec4899"   delay={400} />
+            <RatingBar label="AIM"           value={L.aim}         benchmark={tier.aim}         minVal={0}  maxVal={100} decimals={0} color={T.accent}  delay={0} />
+            <RatingBar label="UTILITY"       value={L.utility}     benchmark={tier.utility}     minVal={0}  maxVal={100} decimals={0} color={T.ct}      delay={100} />
+            <RatingBar label="POSITIONING"   value={L.positioning} benchmark={tier.positioning} minVal={0}  maxVal={100} decimals={0} color={T.accent2} delay={200} />
+            <RatingBar label="OPENING DUELS" value={openingDisplay} benchmark={tier.opening}    minVal={-2} maxVal={2}   decimals={2} color={T.good}    delay={300} />
+            <RatingBar label="CLUTCHING"     value={clutchDisplay}  benchmark={tier.clutch}     minVal={-10} maxVal={30} decimals={2} color="#ec4899"   delay={400} />
           </>, {}, 200)}
 
           {/* Faceit card placed directly under Performance Overview */}
@@ -1575,9 +1575,9 @@ export default function Results({ player, onSearch, onReset }) {
               {card(<>
                 {sectionTitle('Key Stats')}
                 <div style={{ display: 'flex', gap: '24px', justifyContent: 'center' }}>
-                  <MiniCircle label="Headshot %" value={hsPercent} displayValue={`${hsPercent}%`} fill={hsPercent} good={50} bad={30} delay={0} />
-                  <MiniCircle label="Time to Dmg" value={ttdMs} displayValue={ttdMs != null ? `${Math.round(ttdMs)}` : '—'} unit="ms" fill={ttdFill} delay={150} />
-                  <MiniCircle label="Crosshair°" value={preaimDeg} displayValue={preaimDeg != null ? `${preaimDeg.toFixed(1)}°` : '—'} fill={preaimFill} delay={300} />
+                  <MiniCircle label="Headshot Accuracy" value={hsPercent} displayValue={`${hsPercent}%`} fill={hsPercent} good={50} bad={30} delay={0} />
+                  <MiniCircle label="Time to Damage" value={ttdMs} displayValue={ttdMs != null ? `${Math.round(ttdMs)}` : '—'} unit="ms" fill={ttdFill} delay={150} />
+                  <MiniCircle label="Crosshair Placement" value={preaimDeg} displayValue={preaimDeg != null ? `${Math.round(preaimDeg)}°` : '—'} fill={preaimFill} delay={300} />
                 </div>
               </>, { flex: '0 0 auto' })}
 
@@ -1628,8 +1628,8 @@ export default function Results({ player, onSearch, onReset }) {
           {hasLeetify && (L.ctRating != null || L.tRating != null) && (
             <div className="fr-section" style={{ display: 'flex', gap: '14px', animationDelay: '360ms' }}>
               {[
-                { label: 'CT Side Rating', value: L.ctRating, color: T.ct, side: 'CT' },
-                { label: 'T Side Rating',  value: L.tRating,  color: T.tSide, side: 'T' },
+                { label: 'CT Rating', value: L.ctRating, color: T.ct, side: 'CT' },
+                { label: 'T Rating',  value: L.tRating,  color: T.tSide, side: 'T' },
               ].filter(x => x.value != null).map(({ label, value, color, side }) =>
                 <div
                   key={side}
@@ -1657,7 +1657,7 @@ export default function Results({ player, onSearch, onReset }) {
                     fontFamily: 'Barlow Condensed, sans-serif', fontSize: '2.4rem', fontWeight: 800,
                     color, lineHeight: 1, letterSpacing: '0.02em',
                     textShadow: `0 0 30px ${color}55`,
-                  }}>{(value * 100).toFixed(1)}</div>
+                  }}>{(() => { const n = value * 100; return (n >= 0 ? '+' : '') + n.toFixed(2); })()}</div>
                 </div>
               )}
             </div>
