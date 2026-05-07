@@ -54,16 +54,17 @@ const RP_KEYFRAMES = `
 }
 `;
 
-const RedirectPromo = () => (
+const RedirectPromo = ({ compact = false }) => (
   <>
     <style>{RP_KEYFRAMES}</style>
     <div style={{
-      marginTop: 36, width: '100%',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
+      marginTop: compact ? 4 : 36, width: '100%',
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      gap: compact ? 8 : 14,
       animation: 'rp-fadeUp 800ms cubic-bezier(0.16,1,0.3,1) 380ms both',
     }}>
 
-      {/* NEW pill */}
+      {!compact && (
       <div style={{
         display: 'inline-flex', alignItems: 'center', gap: 10,
         padding: '7px 16px', borderRadius: 999,
@@ -81,6 +82,7 @@ const RedirectPromo = () => (
         }} />
         New — Instant Steam Redirect
       </div>
+      )}
 
       {/* Glass card with mock browser bar */}
       <a

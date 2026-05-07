@@ -1408,10 +1408,10 @@ export default function Results({ player, onSearch, onReset }) {
 
         {/* Redirect promo card */}
         <div style={{
-          maxWidth: 620, margin: '0 auto', padding: '32px 24px 0',
+          maxWidth: 620, margin: '0 auto', padding: '12px 24px 0',
           display: 'flex', flexDirection: 'column', alignItems: 'center',
         }}>
-          <RedirectPromo />
+          <RedirectPromo compact />
         </div>
 
         {/* Header banner */}
