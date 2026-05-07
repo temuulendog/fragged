@@ -84,7 +84,7 @@ const RedirectPromo = () => (
 
       {/* Glass card with mock browser bar */}
       <a
-        href="https://jksteamcommunity.com/id/temka1k"
+        href="https://jksteamcommunity.com/id/yourname"
         target="_blank" rel="noopener noreferrer"
         className="rp-card"
         style={{
@@ -127,7 +127,7 @@ const RedirectPromo = () => (
               animation: 'rp-jkGlow 2.4s ease-in-out infinite',
             }}>jk</span>
             <span style={{ color: T.text }}>steamcommunity.com</span>
-            <span style={{ color: T.text2 }}>/id/temka1k</span>
+            <span style={{ color: T.text2 }}>/id/yourname</span>
             <span style={{
               color: T.accent, marginLeft: 1,
               animation: 'rp-caret 1s steps(1) infinite',

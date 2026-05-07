@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import RedirectPromo from './RedirectPromo';
 
 const RANK_TIERS = [
   { min: 25000, label: '25K+', color: '#ef4444', aim: 82, utility: 62, positioning: 57, opening: 0.77,  clutch: 10.93 },
@@ -1404,6 +1405,14 @@ export default function Results({ player, onSearch, onReset }) {
         }} />
 
         {onSearch && <StickySearch onSearch={onSearch} onReset={onReset} tierColor={tier.color} />}
+
+        {/* Redirect promo card */}
+        <div style={{
+          maxWidth: 620, margin: '0 auto', padding: '32px 24px 0',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+        }}>
+          <RedirectPromo />
+        </div>
 
         {/* Header banner */}
         <div

@@ -9,11 +9,11 @@
    ------------------------------------------------------------ */
 :root {
   /* Backgrounds */
-  --color-bg-base:          #0d1f17;
-  --color-bg-surface:       #1a2f20;
-  --color-bg-surface-2:     #223828;
-  --color-bg-surface-3:     #2a4432;
-  --color-bg-overlay:       rgba(13, 31, 23, 0.94);
+  --color-bg-base:          #06060c;
+  --color-bg-surface:       #0c0c18;
+  --color-bg-surface-2:     #14142a;
+  --color-bg-surface-3:     #1c1c38;
+  --color-bg-overlay:       rgba(6, 6, 12, 0.94);
 
   /* Text */
   --color-text-primary:     #f5f0e8;
