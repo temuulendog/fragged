@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.0] — 2026-05-07
+
+A new way to land on FRAGGED: paste any Steam profile URL, swap `steamcommunity.com` for `jksteamcommunity.com`, and you're sent straight to that player's stats page. Adds an animated promo card to the home and results pages that demonstrates the trick, ports the loading screen to the dark navy / purple-cyan theme, and fixes a long-standing green-bleed bug on the body background.
+
+### Added
+
+#### `jksteamcommunity.com` Steam-URL redirect
+- New apex domain `jksteamcommunity.com` (apex + `www`) registered through Cloudflare and bound to a dedicated Cloudflare Worker
+- New `redirect-worker/` package — minimal Worker that pattern-matches the path of any incoming request and 302-redirects to csstat.com:
+  - `/id/<vanity>` → `csstat.com/?q=<vanity>&type=vanity`
+  - `/profiles/<steam64>` → `csstat.com/?q=<steam64>&type=id`
+  - Tolerant of trailing slashes, profile subpaths (`/id/x/inventory`, `/profiles/x/games`), and case variation in the path prefix
+  - Strict on the captured ID — vanity must match `[a-zA-Z0-9_-]{1,64}`, steam64 must be exactly 17 digits; anything else falls through to the catch-all
+  - Catch-all (root, `/market/...`, `/groups/...`, etc.) lands on the csstat.com homepage
+- Both custom domains pinned in `redirect-worker/wrangler.toml` so the routes don't drift from dashboard state
+
+#### Auto-search via `?q=` deep-linking
+- `App.jsx` now reads `?q=<id>&type=<id|vanity>` from `window.location.search` on mount, fires `handleSubmit` with the parsed values, then strips the param via `history.replaceState` so a second search via the StickySearch doesn't carry a stale URL
+- When `type` is missing, type is inferred (`/^\d{17}$/.test(q) ? 'id' : 'vanity'`)
+- This is the landing surface that makes the redirect domain useful — without it the redirect would just dump users on a homepage with junk in the URL bar
+
+#### `<RedirectPromo>` card on Home and Results
+- New `RedirectPromo` component that advertises the redirect trick in a way that matches existing FRAGGED chrome
+- Glassmorphism card with a slow purple border-glow pulse, a continuously-glowing pulse on the **`jk`** letters, a blinking caret, and a bouncing purple ↓ arrow underneath
+- Mock browser bar with macOS traffic-light dots, lock glyph, and a monospace URL where the `jk` prefix is highlighted in the brand purple
+- Card itself is an `<a>` to `https://jksteamcommunity.com/id/yourname` — opens the live redirect in a new tab so users learn the trick by clicking
+- Rendered on Hero (between the search form and the feature pills row) and on Results (between the StickySearch and the player header banner)
+
+### Changed
+
+#### Loading screen — dark navy redesign
+- Old amber spinner / green overlay / cream text retired
+- New screen matches Hero: deep navy background (`#06060c`), three radial accent gradients (purple top, cyan bottom-right, pink bottom-left), drifting blurred glow orbs, and the same masked grid backdrop
+- Spinner is now two concentric SVG arcs — purple outer arc spinning forward, cyan inner arc spinning in reverse, with a small purple/cyan gradient core that pulses
+- Rotating headline ("Fetching your stats…", "Counting your deaths…", etc.) renders with a white→purple gradient text fill and a soft purple drop-shadow
+- Animated three-dot loader and an uppercase `THIS WILL ONLY TAKE A MOMENT` Barlow-Condensed sub
+
+### Fixed
+
+#### Green bleed-through on body background
+- `fragged.css` design tokens (`--color-bg-base`, `--color-bg-surface`, `--color-bg-surface-2`, `--color-bg-surface-3`, `--color-bg-overlay`) were still set to the original dark-green palette from pre-v1.4.0
+- Hero and Results both painted their own dark navy background but only filled their viewport — any content overflow (now triggered, for example, by the new RedirectPromo card pushing Hero past 100vh on shorter viewports) revealed the green body underneath
+- Tokens swapped to the dark navy palette and the `<meta name="theme-color">` updated from `#0d1f17` to `#06060c` so mobile chrome bars also match
+
+### Notes
+- The redirect Worker is deployed manually (`npx wrangler deploy` from `redirect-worker/`) — intentionally outside the existing `deploy-worker.yml` GitHub Actions workflow, because the code is ~20 lines, has no secrets, and is unlikely to change once shipped
+- Cloudflare provisions and renews the TLS certs for `jksteamcommunity.com` + `www.jksteamcommunity.com` automatically once the custom domains are bound via the Worker dashboard
+- The promo card uses `yourname` as the placeholder vanity in the demo URL (not a real account) — a deliberate "this is a placeholder, swap it for your own" cue
+
+---
+
 ## [1.4.0] — 2026-05-03
 
 UX overhaul and resilience pass: the home page and verdict section are rebuilt to match the dark navy / purple-cyan language used throughout Results, every results page now has a sticky search bar and a per-season Premier rank breakdown, match history shows the rank itself alongside the delta, and the backend no longer rejects players whose Steam game-detail privacy is set to friends-only.
@@ -203,6 +254,7 @@ Initial public release.
 
 ---
 
+[1.5.0]: https://github.com/temuulendog/fragged/releases/tag/v1.5.0
 [1.4.0]: https://github.com/temuulendog/fragged/releases/tag/v1.4.0
 [1.3.0]: https://github.com/temuulendog/fragged/releases/tag/v1.3.0
 [1.2.0]: https://github.com/temuulendog/fragged/releases/tag/v1.2.0
