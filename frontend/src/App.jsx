@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Hero from './components/Hero';
 import Loading from './components/Loading';
 import Results from './components/Results';
@@ -39,6 +39,19 @@ export default function App() {
     setError('');
     setState('hero');
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('q');
+    if (!q) return;
+    const explicitType = params.get('type');
+    const type = explicitType === 'vanity' || explicitType === 'id'
+      ? explicitType
+      : /^\d{17}$/.test(q) ? 'id' : 'vanity';
+    handleSubmit(q, type);
+    window.history.replaceState({}, '', window.location.pathname);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
