@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import RedirectPromo from './RedirectPromo';
 
 const T = {
   bg: '#06060c',
@@ -300,11 +301,14 @@ const Hero = ({ onSubmit, error }) => {
             }
           </form>
 
+          {/* Redirect promo (jksteamcommunity.com) */}
+          <RedirectPromo />
+
           {/* Feature row */}
           <div style={{
-            display: 'flex', gap: 28, marginTop: 56, flexWrap: 'wrap',
+            display: 'flex', gap: 28, marginTop: 48, flexWrap: 'wrap',
             justifyContent: 'center',
-            animation: 'hero-fadeUp 800ms cubic-bezier(0.16,1,0.3,1) 380ms both',
+            animation: 'hero-fadeUp 800ms cubic-bezier(0.16,1,0.3,1) 560ms both',
           }}>
             {[
               { label: 'Premier Rank', accent: T.bad },
