@@ -1,3 +1,8 @@
 name = "jksteamcommunity-redirect"
 main = "src/index.js"
 compatibility_date = "2026-05-07"
+
+routes = [
+  { pattern = "jksteamcommunity.com", custom_domain = true },
+  { pattern = "www.jksteamcommunity.com", custom_domain = true },
+]
