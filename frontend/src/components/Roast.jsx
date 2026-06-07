@@ -10,9 +10,9 @@ const Roast = ({ roastText, onReset }) => {
 
   useEffect(() => {
     indexRef.current = 0;
-    setDisplayed('');
-    setDone(false);
     const startTimer = setTimeout(() => {
+      setDisplayed('');
+      setDone(false);
       const interval = setInterval(() => {
         if (indexRef.current < roastText.length) {
           setDisplayed(roastText.slice(0, indexRef.current + 1));

@@ -13,7 +13,7 @@ import FaceitPanel from './FaceitPanel';
 
 export default function Results({ player, onSearch, onReset }) {
   const { name, avatarUrl, level, stats, leetify: L, faceit, fragged, affinity, steamId, statsAvailable = true } = player;
-  const { totalKills, totalDeaths, totalKillsHeadshot, matchesWon, matchesPlayed, hoursPlayed, shotsFired, shotsHit } = stats;
+  const { totalKills, totalKillsHeadshot, matchesWon, matchesPlayed, hoursPlayed } = stats;
 
   const hasLeetify = L && L.aim != null;
   const premier = L?.premier ?? null;
