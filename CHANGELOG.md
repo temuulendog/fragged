@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.0] — 2026-06-08
+
+Complete visual redesign. FRAGGED moves off the dark-navy / purple-cyan "glow" look to a dark **editorial stat-sheet** aesthetic: warm near-black, a single signal-orange accent, Hanken Grotesk + Space Mono typography, hairline-grid structure, and tabular numbers — no gradients, glassmorphism, or glow. Backend, data sources, and the three-tier display logic are unchanged.
+
+### Changed
+- **Whole frontend restyled** to an editorial-grid system. Tokens live in `src/index.css` (CSS vars) and `src/theme.js` (JS inline styles); fonts swapped to Hanken Grotesk + Space Mono.
+- **Results page rebuilt** into focused section components under `src/components/results/` (`PlayerHeader`, `LeetifyAttribution`, `Performance`, `TriangleGauges`, `Roles`, `WeaponAffinity`, `MatchHistory`, `FaceitPanel`, `FraggedAimCard`) orchestrated by `results/Results.jsx`.
+- **Performance** metrics now render as side-by-side cells with a goal-tier tick; the triangle keeps a flat (no-glow) you-vs-goal view with inline tier pills; skill gauges are clean half-arcs.
+- **Faceit** slimmed to level + Elo + "View on Faceit", placed beside the Performance section.
+- **Match history** gains a **Mode** column (Premier / Competitive); the Premier rank-delta backward-scan is preserved.
+- **Loading** screen is now a minimal indeterminate bar; the **landing** leads with an editorial headline + search.
+- The jksteamcommunity promo moved from a full-width card into a compact 2-line masthead line.
+
+### Removed
+- Premier-by-Season card (the public Leetify endpoint only exposes the ~100 most recent matches, so it was mostly empty).
+- The old purple/cyan theme, glassmorphism, glow shadows, drifting orbs / orbiting rings / animated grid, the full-width `RedirectPromo` card, and the unused `fragged.css`.
+
+### Preserved
+- Backend response shape, three-tier display, the `statsAvailable` (private Game Details) fallback, Leetify Section-5 metric labels + official attribution badge with live fetch / no caching, and all data sources.
+
 ## [1.5.0] — 2026-05-07
 
 A new way to land on FRAGGED: paste any Steam profile URL, swap `steamcommunity.com` for `jksteamcommunity.com`, and you're sent straight to that player's stats page. Adds an animated promo card to the home and results pages that demonstrates the trick, ports the loading screen to the dark navy / purple-cyan theme, and fixes a long-standing green-bleed bug on the body background.
@@ -254,6 +274,7 @@ Initial public release.
 
 ---
 
+[2.0.0]: https://github.com/temuulendog/fragged/releases/tag/v2.0.0
 [1.5.0]: https://github.com/temuulendog/fragged/releases/tag/v1.5.0
 [1.4.0]: https://github.com/temuulendog/fragged/releases/tag/v1.4.0
 [1.3.0]: https://github.com/temuulendog/fragged/releases/tag/v1.3.0

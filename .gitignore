@@ -3,3 +3,9 @@ dist
 .env
 *.log
 .wrangler
+.superpowers/
+
+# dev-only redesign preview (not for production)
+frontend/demo.html
+frontend/src/demo.jsx
+frontend/src/mockPlayer.js
