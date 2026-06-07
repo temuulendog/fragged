@@ -135,8 +135,9 @@ All work lands on branch `redesign/editorial-grid`. `main` is untouched, so:
 
 ---
 
-## 9. Open items to confirm before/with implementation
-1. **Accent orange** `#ff5a1f` — locked unless you want it deeper/redder (more molotov).
-2. **Loading screen** — minimal bar + mono status (keep the rotating roast headlines?) — confirm during build.
-3. **Competitive `Rank ±` cell** — show `—` (current spec) or the per-map rank 1–15? (Leaning `—` since comp has no rating.)
-4. **Roast page** scope — restyle only (no AI wiring) this round.
+## 9. Decisions (all confirmed 2026-06-08 — full green light)
+1. **Accent orange `#ff5a1f` — LOCKED.** Chosen to pair with the warm near-black `--bg`; warm/high-contrast/on-brand. Single accent across the whole app.
+2. **Loading screen — LOCKED:** minimal orange indeterminate bar + mono status line on `--bg`, keep the rotating roast headlines (restyled, no gradient/glow).
+3. **Competitive `Rank ±` cell — LOCKED:** show `—` (Competitive has no Premier rating).
+4. **Roast page — LOCKED:** restyle only this round (no AI wiring).
+5. **Scope — LOCKED:** redesign the entire frontend (landing, loading, results, roast, shared CSS, index.html). Backend untouched.
