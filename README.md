@@ -163,7 +163,6 @@ fragged/
 │   ├── index.html
 │   └── package.json
 ├── redirect-worker/            # jksteamcommunity.com → csstat.com redirect Worker
-├── docs/design/                # redesign spec + plan
 ├── CHANGELOG.md
 └── README.md
 ```
