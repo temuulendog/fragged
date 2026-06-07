@@ -9,3 +9,6 @@ dist
 frontend/demo.html
 frontend/src/demo.jsx
 frontend/src/mockPlayer.js
+
+# internal design docs (spec/plan) — keep local, not for the public portfolio repo
+docs/design/
