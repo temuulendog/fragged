@@ -81,9 +81,9 @@ export function Bar({ valuePct, tickPct }) {
 }
 
 // Performance metric cell: mono label, big value, optional bar (with goal tick).
-export function MetricCell({ label, value, accent, valuePct, tickPct }) {
+export function MetricCell({ label, value, accent, valuePct, tickPct, noRight }) {
   return (
-    <div style={{ padding: '15px 14px', borderRight: `1px solid ${T.line}` }}>
+    <div style={{ padding: '15px 14px', borderRight: noRight ? 'none' : `1px solid ${T.line}` }}>
       <div className="mono" style={{ fontSize: 9, color: T.mut, marginBottom: 9 }}>{label}</div>
       <div style={{ fontFamily: T.display, fontWeight: 700, fontSize: 25, fontVariantNumeric: 'tabular-nums', color: accent ? T.acc : T.fg }}>{value}</div>
       {valuePct != null && <Bar valuePct={valuePct} tickPct={tickPct} />}
@@ -92,9 +92,9 @@ export function MetricCell({ label, value, accent, valuePct, tickPct }) {
 }
 
 // Generic stat cell (no bar) for grids — top + right hairlines.
-export function Cell({ label, value, accent }) {
+export function Cell({ label, value, accent, noRight }) {
   return (
-    <div style={{ padding: '15px 18px', borderTop: `1px solid ${T.line}`, borderRight: `1px solid ${T.line}` }}>
+    <div style={{ padding: '15px 18px', borderTop: `1px solid ${T.line}`, borderRight: noRight ? 'none' : `1px solid ${T.line}` }}>
       <div className="mono" style={{ fontSize: 9, color: T.mut, marginBottom: 9 }}>{label}</div>
       <div style={{ fontFamily: T.display, fontWeight: 700, fontSize: 19, fontVariantNumeric: 'tabular-nums', color: accent ? T.acc : T.fg }}>{value}</div>
     </div>
@@ -102,11 +102,11 @@ export function Cell({ label, value, accent }) {
 }
 
 // Clean half-arc gauge (no glow). fill 0..100.
-export function MiniArc({ label, value, fill, accent }) {
+export function MiniArc({ label, value, fill, accent, noRight }) {
   const len = 107;
   const dash = Math.min(len, Math.max(0, (clampPct(fill) / 100) * len));
   return (
-    <div style={{ padding: 18, borderRight: `1px solid ${T.line}`, textAlign: 'center' }}>
+    <div style={{ padding: 18, borderRight: noRight ? 'none' : `1px solid ${T.line}`, textAlign: 'center' }}>
       <svg viewBox="0 0 80 48" width="86" height="52">
         <path d="M6,44 A34 34 0 0 1 74 44" fill="none" stroke={T.line} strokeWidth="4" />
         <path d="M6,44 A34 34 0 0 1 74 44" fill="none" stroke={accent ? T.acc : T.fg} strokeWidth="4" strokeDasharray={`${dash} ${len}`} />
