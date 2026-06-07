@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Hero from './components/Hero';
 import Loading from './components/Loading';
-import Results from './components/Results';
+import Results from './components/results/Results';
 import Roast from './components/Roast';
 
 const MOCK_ROAST = `Your stats have been analyzed. The verdict is in. We've seen worse — but not much worse. Keep grinding.`;
