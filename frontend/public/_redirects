@@ -1,0 +1,4 @@
+# SPA fallback: serve the app for client-side routes like /player/<steam64>.
+# Real static assets (ads.txt, privacy.html, og-image.png, favicon.svg) are
+# served directly — Cloudflare Pages matches assets before this catch-all.
+/*  /index.html  200

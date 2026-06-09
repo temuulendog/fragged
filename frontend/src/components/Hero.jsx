@@ -81,8 +81,9 @@ const Hero = ({ onSubmit, error }) => {
           </div>
         </div>
 
-        <div className="mono" style={{ textAlign: 'center', padding: 16, fontSize: 9, color: T.dim }}>
-          csstat.com
+        <div className="mono" style={{ textAlign: 'center', padding: 16, fontSize: 9, color: T.dim, display: 'flex', justifyContent: 'center', gap: 14 }}>
+          <span>csstat.com</span>
+          <a href="/privacy.html" style={{ color: T.mut, textDecoration: 'none' }}>Privacy</a>
         </div>
       </section>
     </>

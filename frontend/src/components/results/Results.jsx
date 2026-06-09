@@ -10,6 +10,7 @@ import WeaponAffinity from './WeaponAffinity';
 import MatchHistory from './MatchHistory';
 import FraggedAimCard from './FraggedAimCard';
 import FaceitPanel from './FaceitPanel';
+import AdSlot from '../AdSlot';
 
 export default function Results({ player, onSearch, onReset }) {
   const { name, avatarUrl, level, stats, leetify: L, faceit, fragged, affinity, steamId, statsAvailable = true } = player;
@@ -62,6 +63,8 @@ export default function Results({ player, onSearch, onReset }) {
             <MatchHistory matches={matches} visible={visibleMatches} onLoadMore={() => setVisibleMatches(v => Math.min(v + 15, matches.length))} />
           </div>
         )}
+
+        <AdSlot />
 
         {!hasLeetify && fragged && <FraggedAimCard aim={fragged.aim} confidence={fragged.confidence} />}
 

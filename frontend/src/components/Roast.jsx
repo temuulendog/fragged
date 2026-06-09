@@ -74,7 +74,10 @@ const Roast = ({ roastText, onReset }) => {
 
           {/* Footer */}
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 22px', borderTop: `1px solid ${T.line}`, fontFamily: T.mono, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: T.dim }}>
-            <span>csstat.com</span>
+            <span style={{ display: 'flex', gap: 14 }}>
+              <span>csstat.com</span>
+              <a href="/privacy.html" style={{ color: T.mut, textDecoration: 'none' }}>Privacy</a>
+            </span>
             <span>Steam · Leetify · Faceit</span>
           </div>
         </div>
