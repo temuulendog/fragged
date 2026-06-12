@@ -1,7 +1,9 @@
 import { T } from '../../theme';
+import KDRing from './KDRing';
+import PremierBadge from './PremierBadge';
 
-// Top identity row: avatar + name + mono meta line, with the orange Premier rank block.
-export default function PlayerHeader({ name, avatarUrl, level, statsAvailable, hoursPlayed, matchesPlayed, winRate, premier, faceit }) {
+// Top identity row: avatar + name + mono meta line, official-MM K/D ring, orange Premier rank block.
+export default function PlayerHeader({ name, avatarUrl, level, statsAvailable, hoursPlayed, matchesPlayed, winRate, premier, faceit, kd }) {
   const parts = statsAvailable
     ? [
         `Steam Lvl ${level}`,
@@ -32,12 +34,18 @@ export default function PlayerHeader({ name, avatarUrl, level, statsAvailable, h
           <div className="mono" style={{ marginTop: 11, fontSize: 10, color: T.mut }}>{meta}</div>
         </div>
       </div>
-      {premier != null && (
-        <div style={{ background: T.acc, color: T.ink, padding: '18px 30px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end', flex: 'none' }}>
-          <b style={{ fontFamily: T.display, fontWeight: 900, fontSize: 42, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{premier.toLocaleString()}</b>
-          <span className="mono" style={{ fontSize: 9, fontWeight: 700, marginTop: 5 }}>Premier</span>
-        </div>
-      )}
+      <div style={{ display: 'flex', alignItems: 'stretch', flex: 'none' }}>
+        {kd != null && (
+          <div style={{ display: 'flex', alignItems: 'center', padding: '0 24px', borderLeft: `1px solid ${T.line}` }}>
+            <KDRing kd={kd} label="K/D" size={96} />
+          </div>
+        )}
+        {premier != null && (
+          <div style={{ display: 'flex', alignItems: 'center', padding: '0 28px', borderLeft: `1px solid ${T.line}`, flex: 'none' }}>
+            <PremierBadge premier={premier} height={40} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

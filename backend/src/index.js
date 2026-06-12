@@ -47,6 +47,51 @@ const buildUrl = (base, params) => {
   return u.toString();
 };
 
+// CS2 friend code (e.g. AANR4-QQQJ) — a deterministic encoding of the steamID64,
+// no API/scraping needed. Ported from the csgo-friendcode algorithm; MD5 via the
+// Workers runtime crypto.subtle. Verified against AANR4-QQQJ for 76561198874291712.
+const FC_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const fcToLE = (big) => {
+  const r = new Uint8Array(8);
+  for (let i = 0; big > 0n && i < 8; i++) { r[i] = Number(big % 256n); big /= 256n; }
+  return r;
+};
+const fcFromLE = (bytes) => {
+  let result = 0n, base = 1n;
+  for (const b of bytes) { result += base * BigInt(b); base *= 256n; }
+  return result;
+};
+const fcSwap = (big) => fcFromLE([...fcToLE(big)].reverse());
+async function fcHashSteamId(id) {
+  const strange = (id & 0xFFFFFFFFn) | 0x4353474F00000000n;
+  const digest = new Uint8Array(await crypto.subtle.digest('MD5', fcToLE(strange)));
+  return fcFromLE(digest.slice(0, 4));
+}
+async function makeFriendCode(steamId64) {
+  try {
+    let steamid = BigInt(steamId64);
+    const h = await fcHashSteamId(steamid);
+    let r = 0n;
+    for (let i = 0; i < 8; i++) {
+      const idNibble = steamid & 0xFn;
+      steamid >>= 4n;
+      const hashNibble = (h >> BigInt(i)) & 1n;
+      const a = (r << 4n) | idNibble;
+      r = ((r >> 28n) << 32n) | a;
+      r = ((r >> 31n) << 32n) | ((a << 1n) | hashNibble);
+    }
+    let input = fcSwap(r), res = '';
+    for (let i = 0; i < 13; i++) {
+      if (i === 4 || i === 9) res += '-';
+      res += FC_ALPHABET[Number(input & 0x1Fn)];
+      input >>= 5n;
+    }
+    return res.slice(0, 4) === 'AAAA' ? res.slice(5) : res;
+  } catch {
+    return null;
+  }
+}
+
 async function handlePlayer(steamId, type, env) {
   if (!steamId || steamId.length > 64 || /[^a-zA-Z0-9_-]/.test(steamId)) {
     return json({ error: 'Invalid Steam ID or URL.' }, 400);
@@ -67,7 +112,7 @@ async function handlePlayer(steamId, type, env) {
   const leetifyHeaders = env.LEETIFY_API_KEY ? { _leetify_key: env.LEETIFY_API_KEY } : {};
   const faceitHeaders = env.FACEIT_API_KEY ? { Authorization: `Bearer ${env.FACEIT_API_KEY}` } : {};
 
-  const [summaryData, statsData, levelData, hoursData, leetifyData, faceitPlayerData] = await Promise.all([
+  const [summaryData, statsData, levelData, hoursData, leetifyData, faceitPlayerData, inventoryData] = await Promise.all([
     safeGet(buildUrl(`${STEAM_API}/ISteamUser/GetPlayerSummaries/v2/`, { key: KEY, steamids: steamId })),
     safeGet(buildUrl(`${STEAM_API}/ISteamUserStats/GetUserStatsForGame/v2/`, { key: KEY, steamid: steamId, appid: CS2_APP_ID })),
     safeGet(buildUrl(`${STEAM_API}/IPlayerService/GetSteamLevel/v1/`, { key: KEY, steamid: steamId })),
@@ -76,7 +121,23 @@ async function handlePlayer(steamId, type, env) {
     env.FACEIT_API_KEY
       ? safeGet(`https://open.faceit.com/data/v4/players?game=cs2&game_player_id=${steamId}`, faceitHeaders)
       : Promise.resolve(null),
+    // Public CS2 inventory — used only for the medals/coins (collectibles). Best-effort:
+    // Steam rate-limits this from datacenter IPs, so it may return null in production.
+    safeGet(`https://steamcommunity.com/inventory/${steamId}/730/2?l=english&count=2000`, { 'User-Agent': 'Mozilla/5.0' }),
   ]);
+
+  // Medals/coins from the inventory collectibles (icons hosted by Steam's CDN).
+  const medals = [];
+  const seenMedals = new Set();
+  for (const x of inventoryData?.descriptions || []) {
+    const isCollectible = (x.type || '').includes('Collectible') ||
+      (x.tags || []).some((t) => t.category === 'Type' && /collectible/i.test(t.internal_name || ''));
+    if (!isCollectible || !x.icon_url) continue;
+    const name = x.name || x.market_name || 'Medal';
+    if (seenMedals.has(name)) continue;
+    seenMedals.add(name);
+    medals.push({ name, icon: `https://community.cloudflare.steamstatic.com/economy/image/${x.icon_url}` });
+  }
 
   const faceitPlayerId = faceitPlayerData?.player_id;
   const faceitStatsData = faceitPlayerId
@@ -97,8 +158,13 @@ async function handlePlayer(steamId, type, env) {
   }
 
   const steamLevel = levelData?.response?.player_level || 0;
-  const playtimeMinutes = hoursData?.response?.games?.[0]?.playtime_forever || 0;
+  const ownedGame = hoursData?.response?.games?.[0];
+  const playtimeMinutes = ownedGame?.playtime_forever || 0;
   const hoursPlayed = Math.round(playtimeMinutes / 60);
+  const hours2Weeks = Math.round((ownedGame?.playtime_2weeks || 0) / 60);
+  const vanityMatch = profile.profileurl?.match(/\/id\/([^/]+)/);
+  const vanity = vanityMatch ? decodeURIComponent(vanityMatch[1]) : null;
+  const friendCode = await makeFriendCode(steamId);
 
   const rawStats = statsAvailable ? statsData.playerstats.stats : [];
   const stat = (name) => rawStats.find((s) => s.name === name)?.value || 0;
@@ -112,10 +178,16 @@ async function handlePlayer(steamId, type, env) {
   const shotsHit = stat('total_shots_hit');
   const timePlayed = stat('total_time_played');
 
-  const weaponKills = WEAPONS.map((w) => ({
-    name: w.toUpperCase().replace('_SILENCER', '').replace('CZ75A', 'CZ75'),
-    kills: stat(`total_kills_${w}`),
-  }))
+  const weaponKills = WEAPONS.map((w) => {
+    const shots = stat(`total_shots_${w}`);
+    const hits = stat(`total_hits_${w}`);
+    return {
+      key: w,
+      name: w.toUpperCase().replace('_SILENCER', '').replace('CZ75A', 'CZ75'),
+      kills: stat(`total_kills_${w}`),
+      accuracy: shots > 0 ? Math.round((hits / shots) * 100) : null,
+    };
+  })
     .filter((w) => w.kills > 0)
     .sort((a, b) => b.kills - a.kills);
 
@@ -232,8 +304,24 @@ async function handlePlayer(steamId, type, env) {
       favoriteWeaponKills,
     },
     affinity,
+    weapons: weaponKills,
+    medals,
     faceit,
     fragged,
+    // Steam profile box. Legit Web-API + computed fields are filled here;
+    // commendations and inventoryValue are scrape slots (not in the Web API).
+    steam: {
+      steamId64: steamId,
+      vanity,
+      friendCode,
+      registered: profile.timecreated ?? null,
+      playtimeTotal: hoursPlayed || fallbackHours,
+      playtime2Weeks: hours2Weeks,
+      // Scrape slots — game-coordinator data, not exposed by the Steam Web API:
+      commendations: null,   // { friendly, leader, teacher }
+      inventoryValue: null,  // priced CS2 inventory, USD
+      xpLevel: null,         // CS2 profile XP rank (e.g. 362) — not the community level
+    },
     leetify: rating
       ? {
           aim: rating.aim ?? null,
@@ -247,6 +335,10 @@ async function handlePlayer(steamId, type, env) {
           sprayAccuracy: leetifyData.stats?.spray_accuracy ?? null,
           preaim: leetifyData.stats?.preaim ?? null,
           premier: leetifyData.ranks?.premier ?? null,
+          leetifyRating: leetifyData.ranks?.leetify ?? null,
+          winrate: leetifyData.winrate ?? null,
+          totalMatches: leetifyData.total_matches ?? null,
+          firstMatch: leetifyData.first_match_date ?? null,
           recentMatches: premierMatches,
           counterStrafing: leetifyData.stats?.counter_strafing_good_shots_ratio ?? null,
           ctOpeningAggression: leetifyData.stats?.ct_opening_aggression_success_rate ?? null,

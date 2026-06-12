@@ -1,6 +1,6 @@
 # FRAGGED — CS2 Stats Viewer
 
-[![Version](https://img.shields.io/badge/version-2.0.0-ff5a1f)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.1.0-ff5a1f)](./CHANGELOG.md)
 [![Live](https://img.shields.io/badge/live-www.csstat.com-ff5a1f)](https://www.csstat.com)
 [![Stack](https://img.shields.io/badge/stack-React%20%7C%20Vite%20%7C%20Cloudflare-555555)](#stack)
 
@@ -8,7 +8,7 @@
 
 Look up any CS2 player and get a deep breakdown of how they actually play — pulled live from Steam, Leetify, and Faceit. Three-tier display means **every player gets meaningful data**, even without a Leetify or Faceit account. No login needed.
 
-> **v2.0.0 — editorial redesign.** Dark "stat-sheet" aesthetic: warm near-black, a single signal-orange accent, Hanken Grotesk + Space Mono, hairline-grid layout, tabular numbers — no gradients, glassmorphism, or glow.
+> **v2.1.0 — boxed dashboard.** A dense, above-the-fold card grid (Steam · Leetify · Faceit · Medals · Weapons), the real CS2 **Premier rating banner** tinted per rank, and rank art in match history. Built on the v2.0.0 editorial system — warm near-black, a single signal-orange accent, Hanken Grotesk + Space Mono, tabular numbers.
 
 ---
 
@@ -16,23 +16,24 @@ Look up any CS2 player and get a deep breakdown of how they actually play — pu
 
 ### Player header
 - Square avatar, player name, and a mono meta line — Steam level · region · matches · win rate · hours
-- Bold **orange Premier rating block**
+- **Official-MM K/D ring** — green/red gauge from Steam matchmaking kills/deaths
+- **CS2 Premier rating banner** — the in-game / csstats-style rank banner, tinted to the player's 5K bracket (common → unusual) with Roboto numerals
 
-### Performance — Leetify *(tier 1)*
-- **Aim · Utility · Positioning · Opening Duels · Clutching** as side-by-side cells, each with a bar and an orange **goal-tier tick**
-- **You-vs-goal triangle** (flat, no glow) with inline **tier pills** (10K → 25K)
-- **Skill gauges** — Headshot Accuracy, Time to Damage, Crosshair Placement (clean half-arcs)
-- **"Data Provided by Leetify"** attribution — official badge, fetched live, never cached
+### Boxed dashboard
+A dense, above-the-fold grid of cards (csstats-style):
 
-### Sides & roles *(tier 1)*
-- **CT / T ratings**
-- **Opening Duels** — CT vs T aggression success and duel win rate
-- **Trades** — trade-kill / trade-death success, kill opportunities per round
-- **Grenades & Utility** — flashbangs (thrown, enemies/flash, duration, friendly flashes, flash→kill), HE damage (enemies + friendlies), counter-strafing, utility on death
+- **Steam** — SteamID64, CS2 playtime (total / last 2 weeks), **CS friend code** (computed straight from the steamID64, no API call), vanity, registration date; clickable Steam-profile name
+- **Leetify** *(when available)* — Aim · Utility · Positioning · Rating · Opening Duels · Clutching · CT/T Rating · Time to Damage · Preaim · Win Rate · Matches, with the official "Data provided by Leetify" badge
+- **Faceit** *(when available)* — Elo + level icon, K/D, Win% · HS% · ADR · Matches · Entry · Util/Rd · Flash · Sniper · 1v1 · 1v2, recent W/L, clickable Faceit-profile name
+- **Medals** — CS2 service medals, operation coins, and Premier season medals from the Steam inventory
+- **Sides** — CT / T Leetify ratings
+
+### Weapons
+- Per-weapon **kills and accuracy** from Steam lifetime stats, with weapon icons, sorted by kills
 
 ### Match history
-- Up to 99 recent matches; **Map · Mode (Premier/Competitive) · Result · Score · TTD · HS% · Rank ± · Date**
-- **Rank ±** shows the Premier rating plus the delta vs the previous Premier match (Competitive rows show `—`)
+- Up to 99 recent matches; **Map · Mode · Result · Score · TTD · HS% · Rating · Date**
+- **Premier** rows show the rating banner **before → Δ → after**; **Competitive** rows show the rank icon (1–18); unranked Premier shows the empty "none" banner
 - Load More paginates 15 at a time
 
 ### Weapon affinity *(all tiers)*

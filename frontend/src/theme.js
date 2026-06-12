@@ -34,6 +34,23 @@ export function getRankTier(premier) {
   return RANK_TIERS.find(t => premier >= t.min) || RANK_TIERS[RANK_TIERS.length - 1];
 }
 
+// CS2 Premier rating tiers — colored by 5K bracket. Names match the csstats.gg
+// rank art filenames (public/premier/<name>.png); colors are the csstats text
+// colors (legendary verified = rgb(210,44,230) = #d32ce6).
+export const PREMIER_TIERS = [
+  { min: 30000, name: 'unusual',   color: '#fed705' }, // yellow
+  { min: 25000, name: 'ancient',   color: '#eb4b4b' }, // red
+  { min: 20000, name: 'legendary', color: '#d32ce6' }, // pink
+  { min: 15000, name: 'mythical',  color: '#8847ff' }, // purple
+  { min: 10000, name: 'rare',      color: '#4b69ff' }, // blue
+  { min:  5000, name: 'uncommon',  color: '#5e98d9' }, // light blue
+  { min:     0, name: 'common',    color: '#b0c3d9' }, // gray
+];
+export function getPremierTier(premier) {
+  if (premier == null) return null;
+  return PREMIER_TIERS.find(t => premier >= t.min) || PREMIER_TIERS[PREMIER_TIERS.length - 1];
+}
+
 export function parseSearchInput(raw) {
   const s = raw.trim();
   const profileMatch = s.match(/steamcommunity\.com\/profiles\/(\d{17})/);

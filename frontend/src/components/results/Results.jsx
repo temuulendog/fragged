@@ -2,19 +2,21 @@ import { useState } from 'react';
 import { T, KEYFRAMES, getRankTier } from '../../theme';
 import { Masthead, SearchBox, SectionLabel } from '../ui';
 import PlayerHeader from './PlayerHeader';
-import LeetifyAttribution from './LeetifyAttribution';
-import Performance from './Performance';
-import TriangleGauges from './TriangleGauges';
+import SteamCard from './SteamCard';
+import LeetifyCard from './LeetifyCard';
+import WeaponStatsCard from './WeaponStatsCard';
+import MedalsCard from './MedalsCard';
 import Roles from './Roles';
 import WeaponAffinity from './WeaponAffinity';
 import MatchHistory from './MatchHistory';
 import FraggedAimCard from './FraggedAimCard';
-import FaceitPanel from './FaceitPanel';
+import FaceitCard from './FaceitCard';
 import AdSlot from '../AdSlot';
 
 export default function Results({ player, onSearch, onReset }) {
-  const { name, avatarUrl, level, stats, leetify: L, faceit, fragged, affinity, steamId, statsAvailable = true } = player;
-  const { totalKills, totalKillsHeadshot, matchesWon, matchesPlayed, hoursPlayed } = stats;
+  const { name, avatarUrl, level, stats, leetify: L, faceit, fragged, affinity, weapons, medals, steam, steamId, statsAvailable = true } = player;
+  const { totalKills, totalDeaths, totalKillsHeadshot, matchesWon, matchesPlayed, hoursPlayed } = stats;
+  const officialKd = statsAvailable && totalDeaths > 0 ? totalKills / totalDeaths : null;
 
   const hasLeetify = L && L.aim != null;
   const premier = L?.premier ?? null;
@@ -39,7 +41,7 @@ export default function Results({ player, onSearch, onReset }) {
         <PlayerHeader
           name={name} avatarUrl={avatarUrl} level={level}
           statsAvailable={statsAvailable} hoursPlayed={hoursPlayed}
-          matchesPlayed={matchesPlayed} winRate={winRate} premier={premier} faceit={faceit}
+          matchesPlayed={matchesPlayed} winRate={winRate} premier={premier} faceit={faceit} kd={officialKd}
         />
 
         {!statsAvailable && (
@@ -52,9 +54,31 @@ export default function Results({ player, onSearch, onReset }) {
           </div>
         )}
 
-        {hasLeetify && <LeetifyAttribution steamId={steamId} />}
-        {hasLeetify && <Performance L={L} tier={tier} faceit={faceit} />}
-        {hasLeetify && <TriangleGauges L={L} hsPercent={hsPercent} ttdMs={ttdMs} preaimDeg={preaimDeg} goalTier={goalTier} setGoalTier={setGoalTier} />}
+        {(() => {
+          const cards = [];
+          if (steam) cards.push(<SteamCard key="steam" steam={steam} name={name} />);
+          if (hasLeetify) cards.push(<LeetifyCard key="leet" L={L} steamId={steamId} />);
+          if (faceit) cards.push(<FaceitCard key="face" faceit={faceit} />);
+          if (medals?.length) cards.push(<MedalsCard key="medals" medals={medals} />);
+          if (!cards.length) return null;
+          // Round-robin into two columns so short cards (Steam) stack with the next
+          // card instead of leaving a gap beside the tall Leetify card.
+          const colA = cards.filter((_, i) => i % 2 === 0);
+          const colB = cards.filter((_, i) => i % 2 === 1);
+          const col = { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18 };
+          return (
+            <div className="fr-sec" style={{ padding: '18px 22px', display: 'flex', gap: 18, alignItems: 'flex-start' }}>
+              <div style={col}>{colA}</div>
+              {colB.length > 0 && <div style={col}>{colB}</div>}
+            </div>
+          );
+        })()}
+
+        {weapons?.length > 0 && (
+          <div className="fr-sec" style={{ padding: '0 22px 18px' }}>
+            <WeaponStatsCard weapons={weapons} />
+          </div>
+        )}
         {hasLeetify && <Roles L={L} />}
 
         {hasLeetify && matches.length > 0 && (
@@ -67,13 +91,6 @@ export default function Results({ player, onSearch, onReset }) {
         <AdSlot />
 
         {!hasLeetify && fragged && <FraggedAimCard aim={fragged.aim} confidence={fragged.confidence} />}
-
-        {!hasLeetify && faceit && (
-          <div className="fr-sec" style={{ borderTop: `1px solid ${T.line}` }}>
-            <SectionLabel>Faceit</SectionLabel>
-            <FaceitPanel faceit={faceit} />
-          </div>
-        )}
 
         {affinity && <WeaponAffinity affinity={affinity} />}
 

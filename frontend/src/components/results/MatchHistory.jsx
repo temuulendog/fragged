@@ -1,4 +1,5 @@
 import { T } from '../../theme';
+import PremierBadge from './PremierBadge';
 
 // Editorial match table. Columns use only fields the API actually returns per match
 // (no per-match K/D exists, so we show TTD + HS%). Adds the Mode column (Premier/Competitive).
@@ -28,7 +29,7 @@ export default function MatchHistory({ matches, visible, onLoadMore }) {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
-              {['Map', 'Mode', 'Result', 'Score', 'TTD', 'HS%', 'Rank ±', 'Date'].map((h, i) => (
+              {['Map', 'Mode', 'Result', 'Score', 'TTD', 'HS%', 'Rating', 'Date'].map((h, i) => (
                 <th key={h} style={{ ...th, textAlign: i >= 6 ? 'right' : 'left' }}>{h}</th>
               ))}
             </tr>
@@ -46,6 +47,7 @@ export default function MatchHistory({ matches, visible, onLoadMore }) {
                 }
               }
               const isPremier = m.rank_type === 11;
+              const before = rc != null ? m.rank - rc : null;   // previous Premier rating
               return (
                 <tr key={i} className="fr-rowh">
                   <td style={{ ...td, fontWeight: 600 }}>{mapName(m)}</td>
@@ -61,13 +63,19 @@ export default function MatchHistory({ matches, visible, onLoadMore }) {
                   <td style={td}>{m.reaction_time_ms != null ? `${Math.round(m.reaction_time_ms)}ms` : '—'}</td>
                   <td style={td}>{m.accuracy_head != null ? `${Math.round(m.accuracy_head)}%` : '—'}</td>
                   <td style={{ ...td, textAlign: 'right' }}>
-                    {isPremier && m.rank > 0 ? (
-                      <span>
-                        {m.rank.toLocaleString()}{' '}
-                        {rc != null
-                          ? <span style={{ color: rc >= 0 ? T.win : T.loss }}>{rc >= 0 ? '+' : '−'}{Math.abs(rc)}</span>
-                          : <span style={{ color: T.dim }}>—</span>}
-                      </span>
+                    {isPremier ? (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, justifyContent: 'flex-end' }}>
+                        {before != null && <PremierBadge premier={before} height={20} />}
+                        {before != null && (
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>
+                            {rc != null && <span style={{ fontSize: 9, fontWeight: 700, color: rc >= 0 ? T.win : T.loss, marginBottom: 2 }}>{rc >= 0 ? '+' : '−'}{Math.abs(rc).toLocaleString()}</span>}
+                            <span style={{ color: T.dim, fontSize: 12 }}>→</span>
+                          </div>
+                        )}
+                        <PremierBadge premier={m.rank} height={20} />
+                      </div>
+                    ) : (m.rank_type === 12 && m.rank >= 1 && m.rank <= 18) ? (
+                      <img src={`/rank/${m.rank}.svg`} alt={`Rank ${m.rank}`} style={{ height: 20, display: 'inline-block', verticalAlign: 'middle' }} />
                     ) : <span style={{ color: T.dim }}>—</span>}
                   </td>
                   <td style={{ ...td, textAlign: 'right', fontFamily: T.mono, fontSize: 10, color: T.mut }}>{fmtDate(m.finished_at)}</td>

@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.1.0] — 2026-06-13
+
+A **boxed dashboard** built on top of the v2.0.0 editorial system — dense, above-the-fold cards in the style of csstats / csst.at, plus the real CS2 Premier rating art throughout.
+
+### Added
+- **Boxed card grid** — `Card` / `StatGroup` primitives drive a two-column dashboard of Steam, Leetify, Faceit, and Medals cards.
+- **Steam card** (`SteamCard`) — SteamID64, CS2 playtime (total / last 2 weeks), **CS friend code** computed deterministically from the steamID64 (MD5 via the Workers runtime, verified against the in-game value), vanity, registration date, and a clickable Steam-profile name.
+- **CS2 Premier rating banner** (`PremierBadge`) — the official csstats rank art (`public/premier/*.png`) tinted per 5K bracket (`common` → `unusual`), Roboto numerals split big-thousands / small-sub-thousands; unranked renders the empty "none" banner.
+- **K/D ring** (`KDRing`) in the header from Steam matchmaking kills/deaths.
+- **Weapons card** (`WeaponStatsCard`) — per-weapon kills **and accuracy** (`total_hits / total_shots`) from Steam, with weapon icons, sorted by kills.
+- **Medals card** (`MedalsCard`) — CS2 service medals, operation coins, and Premier season medals read from the public Steam inventory collectibles.
+- **Full Faceit card** (`FaceitCard`) — official FACEIT logo + level icons, Elo, K/D, win/HS/ADR, entry, utility, flash, sniper, clutches, recent W/L, clickable profile name.
+- **Match history rank art** — Premier rows show the rating banner **before → Δ → after**; Competitive rows show the rank icon (1–18, `public/rank/*.svg`).
+- Backend: friend-code computation, a `steam` profile object, per-weapon accuracy, `medals` from the inventory, and extra Leetify fields (`leetifyRating`, `winrate`, `totalMatches`, `firstMatch`).
+
+### Changed
+- **Leetify** is now a full stat card (not a slim panel), with the official "Data provided by Leetify" badge.
+- **Premier rank** is shown as the in-game banner instead of a plain orange block.
+
+### Removed
+- The **Breakdown** section (you-vs-goal triangle + tier pills + skill gauges) and the **Opening Duels**, **Trades**, and **Grenades & Utility** role blocks (kept **Sides**).
+
+---
+
 ## [2.0.0] — 2026-06-08
 
 Complete visual redesign. FRAGGED moves off the dark-navy / purple-cyan "glow" look to a dark **editorial stat-sheet** aesthetic: warm near-black, a single signal-orange accent, Hanken Grotesk + Space Mono typography, hairline-grid structure, and tabular numbers — no gradients, glassmorphism, or glow. Backend, data sources, and the three-tier display logic are unchanged.

@@ -117,6 +117,41 @@ export function MiniArc({ label, value, fill, accent, noRight }) {
   );
 }
 
+// Boxed dashboard card — rounded container with an optional logo/title/badge header.
+// The building block of the dense dashboard layout.
+export function Card({ title, logo, badge, children, pad = '14px 16px' }) {
+  const hasHeader = title || logo || badge;
+  return (
+    <div style={{ border: `1px solid ${T.line}`, borderRadius: 10, background: T.surf, overflow: 'hidden' }}>
+      {hasHeader && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: `1px solid ${T.line2}` }}>
+          {logo}
+          {title && <span style={{ fontFamily: T.display, fontWeight: 800, fontSize: 15, letterSpacing: '.02em' }}>{title}</span>}
+          <div style={{ flex: 1 }} />
+          {badge}
+        </div>
+      )}
+      <div style={{ padding: pad }}>{children}</div>
+    </div>
+  );
+}
+
+// Dense label-over-value grid (the csstats-style number block inside a Card).
+// items: [{ label, value, accent?, color? }] — falsy entries are skipped.
+// valueSize tunes the number size (drop it for long string values like IDs/codes).
+export function StatGroup({ items, cols = 3, valueSize = 20 }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))`, gap: '14px 18px' }}>
+      {items.map((it, i) => it && (
+        <div key={i} style={{ minWidth: 0 }}>
+          <div className="mono" style={{ fontSize: 9, color: T.mut, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '.08em', whiteSpace: 'nowrap' }}>{it.label}</div>
+          <div style={{ fontFamily: T.display, fontWeight: 700, fontSize: valueSize, fontVariantNumeric: 'tabular-nums', color: it.accent ? T.acc : (it.color || T.fg), overflowWrap: 'anywhere' }}>{it.value}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // Mono label … value row (used in dense Roles/Grenades blocks).
 export function StatLine({ label, value }) {
   return (
