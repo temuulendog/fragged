@@ -157,30 +157,41 @@ async function fetchBackupData(steamId) {
 // and <div class="best"> (season peak), each holding a cs2rating span whose number
 // is split as 24<small>,763</small>. Returns [{season,end,peak}] sorted, or null.
 async function fetchPremierSeasons(steamId) {
-  try {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 8000);
-    const res = await fetch(`https://csstats.gg/player/${steamId}`, {
-      signal: ctrl.signal,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        Accept: 'text/html,application/xhtml+xml',
-      },
-    }).finally(() => clearTimeout(timer));
-    if (!res.ok) return null;
-    const html = await res.text();
+  const ratingFrom = (segment) => {
+    if (!segment) return null;
+    const m = segment.match(/cs2rating[^>]*>\s*<span[^>]*>([\s\S]*?)<\/span>/);
+    if (!m) return null;
+    const digits = m[1].replace(/\D/g, '');
+    return digits ? parseInt(digits, 10) : null;
+  };
 
-    const ratingFrom = (segment) => {
-      if (!segment) return null;
-      const m = segment.match(/cs2rating[^>]*>\s*<span[^>]*>([\s\S]*?)<\/span>/);
-      if (!m) return null;
-      const digits = m[1].replace(/\D/g, '');
-      return digits ? parseInt(digits, 10) : null;
-    };
+  // csstats.gg intermittently serves datacenter IPs a small (~8KB) stub instead of
+  // the ~170KB profile (rate-limit / cold render). Retry until we get a full page;
+  // a stub is detected by size so we never mistake "blocked" for "no Premier".
+  // Only a FULL page with no Premier tiles means the player genuinely has none.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    let html;
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 8000);
+      const res = await fetch(`https://csstats.gg/player/${steamId}`, {
+        signal: ctrl.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+      }).finally(() => clearTimeout(timer));
+      if (!res.ok) continue;            // transient non-200 → retry
+      html = await res.text();
+    } catch {
+      continue;                          // network error / timeout → retry
+    }
+    if (html.length < 50000) continue;   // stub / blocked page → retry
 
     // The bare alt="Premier" tile is Season 1; "Premier - Season N" gives the rest.
     const markers = [...html.matchAll(/alt="Premier(?: - Season (\d))?"/g)];
-    if (!markers.length) return null;
+    if (!markers.length) return null;    // real page, player has no Premier history
 
     const seasons = [];
     for (let i = 0; i < markers.length; i++) {
@@ -195,12 +206,13 @@ async function fetchPremierSeasons(steamId) {
       if (endRank == null && peak == null) continue;
       seasons.push({ season, end: endRank, peak });
     }
-    if (!seasons.length) return null;
-    seasons.sort((a, b) => a.season - b.season);
-    return seasons;
-  } catch {
+    if (seasons.length) {
+      seasons.sort((a, b) => a.season - b.season);
+      return seasons;
+    }
     return null;
   }
+  return null; // every attempt returned a stub
 }
 
 // Premier seasons with a D1-backed cache. Past seasons never change, so we only

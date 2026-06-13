@@ -1,6 +1,6 @@
 # FRAGGED — CS2 Stats Viewer
 
-[![Version](https://img.shields.io/badge/version-2.2.0-ff5a1f)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.2.1-ff5a1f)](./CHANGELOG.md)
 [![Live](https://img.shields.io/badge/live-www.csstat.com-ff5a1f)](https://www.csstat.com)
 [![Stack](https://img.shields.io/badge/stack-React%20%7C%20Vite%20%7C%20Cloudflare-555555)](#stack)
 

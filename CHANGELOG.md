@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.2.1] — 2026-06-14
+
+### Fixed
+- **Premier seasons sometimes missing.** csstats.gg intermittently serves datacenter IPs a small (~8 KB) stub page instead of the full ~170 KB profile (rate-limit / cold render), which made `fetchPremierSeasons` return nothing and skip caching — so some players (especially uncached ones) showed no Premier history. The scraper now **retries until it gets a full page** (detected by size, so a block is never mistaken for "no Premier"); a real full page with no Premier tiles still correctly yields none. Once captured, the result is cached as before.
+
+### Changed
+- Bumped the backend's local `wrangler` dev dependency to v4.
+
+---
+
 ## [2.2.0] — 2026-06-14
 
 **Premier season history**, a Leetify fallback for accountless players, and a proper mobile layout.
