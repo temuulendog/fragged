@@ -29,12 +29,7 @@ export default function FaceitCard({ faceit: f }) {
   );
 
   const items = [
-    { label: 'Elo', value: (
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-        {f.elo?.toLocaleString() ?? '—'}
-        {f.level != null && <img src={`/faceit/level-${f.level}.png`} alt={`Level ${f.level}`} style={{ height: 22, width: 22, display: 'block', flex: 'none' }} />}
-      </span>
-    ), accent: true },
+    { label: 'Elo', value: f.elo?.toLocaleString() ?? '—', accent: true },
     { label: 'K/D', value: f.kdAvg != null ? f.kdAvg.toFixed(2) : '—' },
     { label: 'Win %', value: pctNum(f.winRate) },
     { label: 'HS %', value: pctNum(f.hsAvg) },

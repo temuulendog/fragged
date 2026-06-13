@@ -4,19 +4,21 @@ import { Masthead, SearchBox, SectionLabel } from '../ui';
 import PlayerHeader from './PlayerHeader';
 import SteamCard from './SteamCard';
 import LeetifyCard from './LeetifyCard';
+import BackupCard from './BackupCard';
 import WeaponStatsCard from './WeaponStatsCard';
 import MedalsCard from './MedalsCard';
-import Roles from './Roles';
 import WeaponAffinity from './WeaponAffinity';
 import MatchHistory from './MatchHistory';
 import FraggedAimCard from './FraggedAimCard';
 import FaceitCard from './FaceitCard';
 import AdSlot from '../AdSlot';
+import useIsMobile from '../../useIsMobile';
 
 export default function Results({ player, onSearch, onReset }) {
-  const { name, avatarUrl, level, stats, leetify: L, faceit, fragged, affinity, weapons, medals, steam, steamId, statsAvailable = true } = player;
+  const { name, avatarUrl, level, stats, leetify: L, backup_data: backupData, premierSeasons, faceit, fragged, affinity, weapons, medals, steam, steamId, statsAvailable = true } = player;
   const { totalKills, totalDeaths, totalKillsHeadshot, matchesWon, matchesPlayed, hoursPlayed } = stats;
   const officialKd = statsAvailable && totalDeaths > 0 ? totalKills / totalDeaths : null;
+  const mobile = useIsMobile();
 
   const hasLeetify = L && L.aim != null;
   const premier = L?.premier ?? null;
@@ -41,7 +43,7 @@ export default function Results({ player, onSearch, onReset }) {
         <PlayerHeader
           name={name} avatarUrl={avatarUrl} level={level}
           statsAvailable={statsAvailable} hoursPlayed={hoursPlayed}
-          matchesPlayed={matchesPlayed} winRate={winRate} premier={premier} faceit={faceit} kd={officialKd}
+          matchesPlayed={matchesPlayed} winRate={winRate} premier={premier} premierSeasons={premierSeasons} faceit={faceit} kd={officialKd}
         />
 
         {!statsAvailable && (
@@ -58,11 +60,20 @@ export default function Results({ player, onSearch, onReset }) {
           const cards = [];
           if (steam) cards.push(<SteamCard key="steam" steam={steam} name={name} />);
           if (hasLeetify) cards.push(<LeetifyCard key="leet" L={L} steamId={steamId} />);
+          else if (backupData) cards.push(<BackupCard key="backup" data={backupData} />);
           if (faceit) cards.push(<FaceitCard key="face" faceit={faceit} />);
+          // Premier seasons now live in the header (PlayerHeader), so Medals is a plain card.
           if (medals?.length) cards.push(<MedalsCard key="medals" medals={medals} />);
           if (!cards.length) return null;
-          // Round-robin into two columns so short cards (Steam) stack with the next
-          // card instead of leaving a gap beside the tall Leetify card.
+          // Mobile: one column. Desktop: round-robin into two columns so short cards
+          // (Steam) stack with the next card instead of gapping beside tall Leetify.
+          if (mobile) {
+            return (
+              <div className="fr-sec" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {cards}
+              </div>
+            );
+          }
           const colA = cards.filter((_, i) => i % 2 === 0);
           const colB = cards.filter((_, i) => i % 2 === 1);
           const col = { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18 };
@@ -79,8 +90,6 @@ export default function Results({ player, onSearch, onReset }) {
             <WeaponStatsCard weapons={weapons} />
           </div>
         )}
-        {hasLeetify && <Roles L={L} />}
-
         {hasLeetify && matches.length > 0 && (
           <div className="fr-sec">
             <SectionLabel hint={`${Math.min(visibleMatches, matches.length)} / ${matches.length}`}>Match History</SectionLabel>

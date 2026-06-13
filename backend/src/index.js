@@ -92,6 +92,187 @@ async function makeFriendCode(steamId64) {
   }
 }
 
+// Backup performance numbers — used ONLY when a player has no Leetify profile.
+// Scrapes csst.at (third-party CS2 aggregator) for the headline stats and returns
+// them in a plain shape. NOT presented as Leetify data on the frontend (see
+// BackupCard — no Leetify logo/badge/link). Returns null on any failure or timeout
+// so the box simply doesn't render. The HTMX headers tell csst.at which player's
+// fragment we want; without them it returns arbitrary queued data.
+async function fetchBackupData(steamId) {
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    const res = await fetch(`https://csst.at/${steamId}/leetify-extra`, {
+      signal: ctrl.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
+        Referer: `https://csst.at/profile/${steamId}`,
+        'HX-Request': 'true',
+        'HX-Current-URL': `https://csst.at/profile/${steamId}`,
+        'HX-Target': `section-leetify-${steamId}`,
+        'HX-Trigger': `section-leetify-${steamId}`,
+        Accept: 'text/html,*/*',
+      },
+    }).finally(() => clearTimeout(timer));
+    if (!res.ok) return null;
+    const html = await res.text();
+
+    const grab = (id) => {
+      const m = html.match(new RegExp(`id="${id}"[^>]*>[\\s\\S]*?([+\\-]?[\\d]+\\.?[\\d]*)\\s*<`));
+      return m ? parseFloat(m[1]) : null;
+    };
+
+    const aim = grab(`leetify-aim-${steamId}`);
+    if (aim == null) return null; // wrong player's data or empty response
+
+    const opening = grab(`leetify-opening-${steamId}`);
+    const clutch = grab(`leetify-clutch-${steamId}`);
+    const ratingTip = html.match(new RegExp(`id="leetify-rating-${steamId}"[^>]*data-tip="([^"]+)"`));
+    const ctMatch = ratingTip ? ratingTip[1].match(/CT:\s*([+\-]?[\d.]+)/) : null;
+    // \bT: so we don't match the "T:" inside "CT:" (tooltip is "CT: x / T: y").
+    const tMatch = ratingTip ? ratingTip[1].match(/\bT:\s*([+\-]?[\d.]+)/) : null;
+    const winrateMatch = html.match(new RegExp(`id="leetify-winrate-${steamId}"[\\s\\S]*?data-tip="All-time"[\\s\\S]*?<span[^>]*>\\s*(\\d+)%`));
+    const matchesMatch = html.match(new RegExp(`id="leetify-games-${steamId}"[^>]*>[\\s]*([\\d]+)[\\s]*<`));
+
+    return {
+      aim: Math.round(aim),
+      utility: Math.round(grab(`leetify-utility-${steamId}`) ?? 0),
+      positioning: Math.round(grab(`leetify-positioning-${steamId}`) ?? 0),
+      leetifyRating: grab(`leetify-rating-${steamId}`),
+      opening: opening != null ? opening / 100 : null,
+      clutch: clutch != null ? clutch / 100 : null,
+      ctRating: ctMatch ? parseFloat(ctMatch[1]) / 100 : null,
+      tRating: tMatch ? parseFloat(tMatch[1]) / 100 : null,
+      winrate: winrateMatch ? parseInt(winrateMatch[1]) / 100 : null,
+      totalMatches: matchesMatch ? parseInt(matchesMatch[1]) : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// Per-season Premier ranks from csstats.gg — the only source for past seasons and
+// season peaks (Steam/Leetify don't expose them). Each season renders as an
+// <img alt="Premier - Season N"> followed by a <div class="rank"> (end-of-season)
+// and <div class="best"> (season peak), each holding a cs2rating span whose number
+// is split as 24<small>,763</small>. Returns [{season,end,peak}] sorted, or null.
+async function fetchPremierSeasons(steamId) {
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    const res = await fetch(`https://csstats.gg/player/${steamId}`, {
+      signal: ctrl.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml',
+      },
+    }).finally(() => clearTimeout(timer));
+    if (!res.ok) return null;
+    const html = await res.text();
+
+    const ratingFrom = (segment) => {
+      if (!segment) return null;
+      const m = segment.match(/cs2rating[^>]*>\s*<span[^>]*>([\s\S]*?)<\/span>/);
+      if (!m) return null;
+      const digits = m[1].replace(/\D/g, '');
+      return digits ? parseInt(digits, 10) : null;
+    };
+
+    // The bare alt="Premier" tile is Season 1; "Premier - Season N" gives the rest.
+    const markers = [...html.matchAll(/alt="Premier(?: - Season (\d))?"/g)];
+    if (!markers.length) return null;
+
+    const seasons = [];
+    for (let i = 0; i < markers.length; i++) {
+      const season = markers[i][1] ? parseInt(markers[i][1], 10) : 1;
+      const start = markers[i].index;
+      const end = i + 1 < markers.length ? markers[i + 1].index : start + 1400;
+      const block = html.slice(start, end);
+      const rankSeg = block.match(/class="rank">([\s\S]*?)<\/div>\s*<\/div>/);
+      const bestSeg = block.match(/class="best">([\s\S]*?)<\/div>\s*<\/div>/);
+      const endRank = ratingFrom(rankSeg && rankSeg[1]);
+      const peak = ratingFrom(bestSeg && bestSeg[1]);
+      if (endRank == null && peak == null) continue;
+      seasons.push({ season, end: endRank, peak });
+    }
+    if (!seasons.length) return null;
+    seasons.sort((a, b) => a.season - b.season);
+    return seasons;
+  } catch {
+    return null;
+  }
+}
+
+// Premier seasons with a D1-backed cache. Past seasons never change, so we only
+// re-scrape csstats.gg when the data is "stale":
+//   - Leetify users: stale only if a newer Premier match exists than when we last
+//     scraped (free signal — Leetify is already fetched; zero extra requests).
+//   - Everyone else: time-based TTL fallback.
+// Falls back to a live scrape (no cache) if no D1 binding is configured.
+const PREMIER_TTL_MS = 2 * 60 * 60 * 1000; // 2h — only used when there's no match feed
+
+// Create the cache table on first use, so no manual schema push is needed (the deploy
+// token can't run remote `d1 execute`). schema.sql mirrors this DDL. Memoized per isolate.
+let schemaReady = false;
+async function ensureSchema(db) {
+  if (schemaReady) return;
+  await db
+    .prepare('CREATE TABLE IF NOT EXISTS premier_cache (steamid TEXT PRIMARY KEY, seasons_json TEXT NOT NULL, last_match_seen INTEGER, updated_at INTEGER NOT NULL)')
+    .run();
+  schemaReady = true;
+}
+
+async function getPremierSeasons(steamId, latestMatchMs, db) {
+  if (!db) return await fetchPremierSeasons(steamId);
+
+  try {
+    await ensureSchema(db);
+  } catch (e) {
+    console.error('D1 schema init failed:', e.message);
+    return await fetchPremierSeasons(steamId);
+  }
+
+  let row = null;
+  try {
+    row = await db
+      .prepare('SELECT seasons_json, last_match_seen, updated_at FROM premier_cache WHERE steamid = ?')
+      .bind(steamId)
+      .first();
+  } catch (e) {
+    console.error('D1 read failed:', e.message);
+    return await fetchPremierSeasons(steamId); // degrade to live scrape
+  }
+
+  const now = Date.now();
+  let stale;
+  if (!row) stale = true;
+  else if (latestMatchMs != null) stale = latestMatchMs > (row.last_match_seen ?? 0);
+  else stale = now - (row.updated_at ?? 0) > PREMIER_TTL_MS;
+
+  if (!stale) {
+    try { return JSON.parse(row.seasons_json); } catch { /* fall through to scrape */ }
+  }
+
+  const fresh = await fetchPremierSeasons(steamId);
+  if (!fresh) {
+    // Scrape failed/blocked → serve the last good copy if we have one.
+    if (row) { try { return JSON.parse(row.seasons_json); } catch { return null; } }
+    return null;
+  }
+  try {
+    await db
+      .prepare(
+        'INSERT INTO premier_cache (steamid, seasons_json, last_match_seen, updated_at) VALUES (?, ?, ?, ?) ' +
+        'ON CONFLICT(steamid) DO UPDATE SET seasons_json=excluded.seasons_json, last_match_seen=excluded.last_match_seen, updated_at=excluded.updated_at'
+      )
+      .bind(steamId, JSON.stringify(fresh), latestMatchMs, now)
+      .run();
+  } catch (e) {
+    console.error('D1 write failed:', e.message);
+  }
+  return fresh;
+}
+
 async function handlePlayer(steamId, type, env) {
   if (!steamId || steamId.length > 64 || /[^a-zA-Z0-9_-]/.test(steamId)) {
     return json({ error: 'Invalid Steam ID or URL.' }, 400);
@@ -216,7 +397,20 @@ async function handlePlayer(steamId, type, env) {
   } : null;
 
   const rating = leetifyData?.rating || null;
+
+  // No Leetify profile → fetch backup numbers from csst.at. Skipped entirely
+  // (no request at all) when the player already has a Leetify rating.
+  const backupData = !rating ? await fetchBackupData(steamId) : null;
+
   const allMatches = leetifyData?.recent_matches || [];
+
+  // Premier seasons (csstats.gg, D1-cached). The latest Premier-match timestamp from
+  // Leetify is the cache-invalidation signal — if it hasn't advanced, the rank can't
+  // have changed, so we skip the scrape entirely.
+  const latestPremierMatchMs = allMatches
+    .filter((m) => m.rank_type === 11 && m.finished_at)
+    .reduce((max, m) => Math.max(max, Date.parse(m.finished_at) || 0), 0) || null;
+  const premierSeasons = await getPremierSeasons(steamId, latestPremierMatchMs, env.DB);
   const premierMatches = allMatches
     .filter((m) => m.rank_type === 11 || m.rank_type === 12)
     .slice(0, 99);
@@ -358,6 +552,8 @@ async function handlePlayer(steamId, type, env) {
           utilityOnDeath: leetifyData.stats?.utility_on_death_avg ?? null,
         }
       : null,
+    backup_data: backupData,
+    premierSeasons,
   });
 }
 

@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.2.0] — 2026-06-14
+
+**Premier season history**, a Leetify fallback for accountless players, and a proper mobile layout.
+
+### Added
+- **Premier seasons in the header** (`PremierSeasons`) — every CS2 Premier season the player has ranked in, scraped from csstats.gg: each season's **final** rank and **best (peak)** rank, rendered with the in-game Premier banner art (current season on top). Replaces the single big Premier badge.
+- **Premier-season cache (Cloudflare D1)** — seasons are stored per player and re-fetched only when needed. Past seasons never change, so they're cached indefinitely; the current season is invalidated by the player's latest Leetify Premier-match timestamp (zero extra requests — Leetify is already fetched), falling back to a 2-hour TTL for players without Leetify. The table is created on first use; a live scrape is used if the binding is ever absent.
+- **Backup stats for accountless players** (`BackupCard`) — when a player has no Leetify profile, Leetify-style numbers (Aim, Utility, Positioning, Rating, Opening, Clutch, CT/T, Win Rate, Matches) are sourced from csst.at and shown as a plain stats box — deliberately **not** branded as Leetify (no logo, badge, or "View on Leetify" link).
+- **Mobile layout** — the desktop-only fixed grids now collapse to a single column on phones (`useIsMobile`): the header stacks, the card grid goes one-column, and side-by-side blocks stack.
+
+### Changed
+- The header **K/D ring** stays but drops its "K/D" text label.
+
+### Removed
+- The **Sides** (CT/T) section — those ratings already live in the Leetify card.
+- The inline Faceit **level icon** next to the Elo value (the level badge stays in the card header).
+
+---
+
 ## [2.1.0] — 2026-06-13
 
 A **boxed dashboard** built on top of the v2.0.0 editorial system — dense, above-the-fold cards in the style of csstats / csst.at, plus the real CS2 Premier rating art throughout.

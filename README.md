@@ -1,6 +1,6 @@
 # FRAGGED — CS2 Stats Viewer
 
-[![Version](https://img.shields.io/badge/version-2.1.0-ff5a1f)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.2.0-ff5a1f)](./CHANGELOG.md)
 [![Live](https://img.shields.io/badge/live-www.csstat.com-ff5a1f)](https://www.csstat.com)
 [![Stack](https://img.shields.io/badge/stack-React%20%7C%20Vite%20%7C%20Cloudflare-555555)](#stack)
 
@@ -8,7 +8,7 @@
 
 Look up any CS2 player and get a deep breakdown of how they actually play — pulled live from Steam, Leetify, and Faceit. Three-tier display means **every player gets meaningful data**, even without a Leetify or Faceit account. No login needed.
 
-> **v2.1.0 — boxed dashboard.** A dense, above-the-fold card grid (Steam · Leetify · Faceit · Medals · Weapons), the real CS2 **Premier rating banner** tinted per rank, and rank art in match history. Built on the v2.0.0 editorial system — warm near-black, a single signal-orange accent, Hanken Grotesk + Space Mono, tabular numbers.
+> **v2.2.0 — Premier seasons + mobile.** Full CS2 **Premier season history** in the header (each season's final and peak rank, from csstats.gg, cached in Cloudflare D1), a Leetify-style **fallback** for players with no Leetify account, and a proper single-column **mobile** layout. Built on the v2.1.0 boxed dashboard and the v2.0.0 editorial system — warm near-black, a single signal-orange accent, Hanken Grotesk + Space Mono, tabular numbers.
 
 ---
 
@@ -17,16 +17,16 @@ Look up any CS2 player and get a deep breakdown of how they actually play — pu
 ### Player header
 - Square avatar, player name, and a mono meta line — Steam level · region · matches · win rate · hours
 - **Official-MM K/D ring** — green/red gauge from Steam matchmaking kills/deaths
-- **CS2 Premier rating banner** — the in-game / csstats-style rank banner, tinted to the player's 5K bracket (common → unusual) with Roboto numerals
+- **Premier season history** — every CS2 Premier season the player has ranked in, showing each season's **final** and **best (peak)** rank with the in-game banner art (from csstats.gg, cached in Cloudflare D1)
 
 ### Boxed dashboard
 A dense, above-the-fold grid of cards (csstats-style):
 
 - **Steam** — SteamID64, CS2 playtime (total / last 2 weeks), **CS friend code** (computed straight from the steamID64, no API call), vanity, registration date; clickable Steam-profile name
 - **Leetify** *(when available)* — Aim · Utility · Positioning · Rating · Opening Duels · Clutching · CT/T Rating · Time to Damage · Preaim · Win Rate · Matches, with the official "Data provided by Leetify" badge
-- **Faceit** *(when available)* — Elo + level icon, K/D, Win% · HS% · ADR · Matches · Entry · Util/Rd · Flash · Sniper · 1v1 · 1v2, recent W/L, clickable Faceit-profile name
+- **Backup stats** *(no Leetify account)* — the same Leetify-style numbers sourced from csst.at and shown as a plain box, deliberately **not** branded as Leetify
+- **Faceit** *(when available)* — Elo (level icon in the card header), K/D, Win% · HS% · ADR · Matches · Entry · Util/Rd · Flash · Sniper · 1v1 · 1v2, recent W/L, clickable Faceit-profile name
 - **Medals** — CS2 service medals, operation coins, and Premier season medals from the Steam inventory
-- **Sides** — CT / T Leetify ratings
 
 ### Weapons
 - Per-weapon **kills and accuracy** from Steam lifetime stats, with weapon icons, sorted by kills
@@ -173,7 +173,6 @@ fragged/
 ## Roadmap
 
 - **AI roast** — Claude-powered breakdown of stats, actually funny, not generic *(currently a static placeholder)*
-- **Mobile** — proper responsive layout (currently desktop-first)
 - **Map win rates / weapon breakdowns** — per-map and per-weapon performance
 - **Share card** — one-click image export
 - **Player vs player** — head-to-head stat overlay
